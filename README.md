@@ -12,7 +12,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 <a href="https://glama.ai/mcp/servers/resume-parser-mcp">
-  <img width="380" height="200" src="https://glama.ai/mcp/servers/resume-parser-mcp/badge" alt="Resume Parser MCP server" />
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/resume-parser-mcp/badge" alt="mcp-ai-hr-management-toolkit server" />
 </a>
 
 ---
@@ -41,7 +41,7 @@ No installation needed. Point your MCP client at the package:
   "mcpServers": {
     "resume-parser": {
       "command": "npx",
-      "args": ["-y", "resume-parser-mcp"]
+      "args": ["-y", "mcp-ai-hr-management-toolkit"]
     }
   }
 }
@@ -57,7 +57,7 @@ No installation needed. Point your MCP client at the package:
   "servers": {
     "resume-parser": {
       "command": "npx",
-      "args": ["-y", "resume-parser-mcp"]
+      "args": ["-y", "mcp-ai-hr-management-toolkit"]
     }
   }
 }
@@ -71,15 +71,16 @@ No installation needed. Point your MCP client at the package:
 
 ### Option 1: NPX (Zero-install, recommended)
 ```json
-{ "command": "npx", "args": ["-y", "resume-parser-mcp"] }
+{ "command": "npx", "args": ["-y", "mcp-ai-hr-management-toolkit"] }
 ```
 
 ### Option 2: Global install
 ```bash
-npm install -g resume-parser-mcp
+npm install -g mcp-ai-hr-management-toolkit
 ```
+
 ```json
-{ "command": "resume-parser-mcp" }
+{ "command": "mcp-ai-hr-management-toolkit" }
 ```
 
 ### Option 3: Remote HTTP endpoint
