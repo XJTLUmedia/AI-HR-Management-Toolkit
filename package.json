@@ -64,6 +64,7 @@
     "pdf-parse": "^2.4.5",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "user": "^0.0.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
