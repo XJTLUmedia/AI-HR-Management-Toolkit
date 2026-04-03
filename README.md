@@ -2,7 +2,13 @@
 
 AI-powered resume parser & ATS toolkit with **20 MCP tools**. Parse PDFs, extract skills, detect patterns, score candidates, and manage a full hiring pipeline — all from your AI assistant.
 
-#### Placeholder content for NPM
+## Placeholder content for NPM
+
+<img width="1889" height="781" alt="image" src="https://github.com/user-attachments/assets/572b4dd8-8fd4-469c-b71d-a4f513c4b466" />
+<img width="1896" height="635" alt="image" src="https://github.com/user-attachments/assets/aa0fc7c1-6373-4a48-9faf-3b15c42871f1" />
+<img width="1562" height="572" alt="image" src="https://github.com/user-attachments/assets/4a0ec218-b61f-43c8-b6b8-657219e30dab" />
+
+Live page: https://ai-hr-management-toolkit.vercel.app
 
 [![npm version](https://img.shields.io/npm/v/resume-parser-mcp)](https://www.npmjs.com/package/resume-parser-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
