@@ -8,7 +8,7 @@
 
 **Live demo:** https://ai-hr-management-toolkit.vercel.app
 
-[![npm version](https://img.shields.io/npm/v/resume-parser-mcp)](https://www.npmjs.com/package/resume-parser-mcp)
+[![npm version](https://img.shields.io/npm/v/mcp-ai-hr-management-toolkit)](https://www.npmjs.com/package/mcp-ai-hr-management-toolkit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 <a href="https://glama.ai/mcp/servers/resume-parser-mcp">
