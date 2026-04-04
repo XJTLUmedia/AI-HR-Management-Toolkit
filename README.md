@@ -47,6 +47,12 @@ No installation needed. Point your MCP client at the package:
 }
 ```
 
+Example usage: 
+
+<img width="1101" height="556" alt="image" src="https://github.com/user-attachments/assets/34a8fd29-5f51-4f8b-9f3c-df0e31f36354" />
+
+<img width="1094" height="314" alt="image" src="https://github.com/user-attachments/assets/fb641f07-a977-413c-903c-b67f806d75b1" />
+
 **Claude Desktop** — Edit `%APPDATA%\Claude\claude_desktop_config.json` (Windows) or `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 
 **Cursor** — Add to `.cursor/mcp.json` in your project or global config
