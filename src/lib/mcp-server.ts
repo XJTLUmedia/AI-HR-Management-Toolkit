@@ -244,7 +244,7 @@ const allTools = [
 
 export function createResumeParserMcpServer(): Server {
   const server = new Server(
-    { name: "ai-hr-management-toolkit", version: "3.1.0" },
+    { name: "ai-hr-management-toolkit", version: "3.1.1" },
     { capabilities: { tools: {}, resources: {}, prompts: {} } }
   );
 
