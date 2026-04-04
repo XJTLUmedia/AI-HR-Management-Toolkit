@@ -34,7 +34,7 @@ export async function GET(req: Request) {
     return new Response(
       JSON.stringify({
         name: "ai-hr-management-toolkit",
-        version: "3.0.0",
+        version: "3.1.0",
         protocol: "MCP (Model Context Protocol)",
         transport: "Streamable HTTP",
         tools: 21,

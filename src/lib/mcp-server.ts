@@ -85,7 +85,7 @@ const MCP_RESOURCE_CONTENT: Record<string, string> = {
     "  analyze_resume       — Unified analysis with selectable aspects: keywords, entities, skills,",
     "                         experience, patterns, similarity, or all. 100% algorithmic — no AI calls.",
     "  batch_parse_resumes  — Parse up to 20 resumes in one call; returns an array of parsed results.",
-    "  assess_candidate     — Score a candidate against custom criteria (requires apiKey).",
+    "  assess_candidate     — Score a candidate against custom criteria. Algorithmic fallback if no apiKey provided.",
     "  inspect_pipeline     — Inspect the internal NLP analysis pipeline for debugging.",
     "",
     "ATS TOOLS",
@@ -244,7 +244,7 @@ const allTools = [
 
 export function createResumeParserMcpServer(): Server {
   const server = new Server(
-    { name: "ai-hr-management-toolkit", version: "3.0.0" },
+    { name: "ai-hr-management-toolkit", version: "3.1.0" },
     { capabilities: { tools: {}, resources: {}, prompts: {} } }
   );
 

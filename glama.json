@@ -2,14 +2,14 @@
   "$schema": "https://glama.ai/mcp/schemas/server.json",
   "name": "ai-hr-management-toolkit",
   "display_name": "AI HR Management Toolkit MCP Server",
-  "description": "AI-powered HR management toolkit with 24 MCP tools — parse PDFs/DOCX, extract skills, detect patterns, score candidates, and manage an ATS pipeline. Pure-data tools with no LLM dependency.",
-  "version": "3.0.5",
+  "description": "AI-powered HR management toolkit with 21 MCP tools — parse PDFs/DOCX, extract skills, detect patterns, score candidates, and manage an ATS pipeline. Pure-data tools with no LLM dependency.",
+  "version": "3.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/XJTLUmedia/AI-HR-Management-Toolkit"
   },
   "maintainers": ["XJTLUmedia"],
-  "tools": 24,
+  "tools": 21,
   "categories": ["productivity", "data-processing"],
   "tags": [
     "resume",

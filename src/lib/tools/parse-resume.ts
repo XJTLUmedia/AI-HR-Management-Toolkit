@@ -57,9 +57,9 @@ export const parseResumeTool = {
             },
             next_steps: [
               "Call inspect_pipeline with the rawText for detailed 5-stage analysis with confidence scores",
-              "Call extract_keywords for deeper TF-IDF keyword analysis and skill section content",
-              "Call detect_patterns for date ranges, metrics, and section-level content",
-              "Call compute_similarity with a job description to assess candidate fit",
+              "Call analyze_resume with aspects: ['keywords'] for deeper TF-IDF keyword analysis and skill section content",
+              "Call analyze_resume with aspects: ['patterns'] for date ranges, metrics, and section-level content",
+              "Call analyze_resume with aspects: ['similarity'] and a jobDescription to assess candidate fit",
             ],
           }),
         },

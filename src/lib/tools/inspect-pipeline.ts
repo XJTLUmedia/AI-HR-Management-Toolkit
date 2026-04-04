@@ -53,8 +53,8 @@ export const inspectPipelineTool = {
             next_steps: [
               "Review stage confidence scores — stages below 70% may need manual verification",
               "Check ambiguous entities and disambiguation results for accuracy",
-              "Use extract_keywords for deeper keyword analysis if skill classification needs refinement",
-              "Use detect_patterns to extract structured date ranges and metrics for experience analysis",
+              "Use analyze_resume with aspects: ['keywords'] for deeper keyword analysis if skill classification needs refinement",
+              "Use analyze_resume with aspects: ['patterns'] to extract structured date ranges and metrics for experience analysis",
               "Analyze the dataQuality and assumptions to identify potential parsing issues",
             ],
           }),
