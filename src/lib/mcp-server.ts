@@ -3,6 +3,7 @@ import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
   ListResourcesRequestSchema,
+  ListResourceTemplatesRequestSchema,
   ReadResourceRequestSchema,
   ListPromptsRequestSchema,
   GetPromptRequestSchema,
@@ -250,6 +251,10 @@ export function createResumeParserMcpServer(): Server {
 
   server.setRequestHandler(ListResourcesRequestSchema, async () => ({
     resources: MCP_RESOURCES,
+  }));
+
+  server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => ({
+    resourceTemplates: [],
   }));
 
   server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
