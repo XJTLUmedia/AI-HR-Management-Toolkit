@@ -1,7 +1,7 @@
 {
   "name": "mcp-ai-hr-management-toolkit",
-  "version": "3.0.1",
-  "description": "AI-powered resume parser with 20 MCP tools — parse PDFs/DOCX, extract skills, detect patterns, score candidates, and manage an ATS pipeline.",
+  "version": "3.0.2",
+  "description": "AI-powered HR management toolkit with 24 MCP tools — parse PDFs/DOCX, extract skills, detect patterns, score candidates, and manage an ATS pipeline.",
   "keywords": [
     "mcp",
     "model-context-protocol",
@@ -24,6 +24,9 @@
   "homepage": "",
   "bugs": {
     "url": ""
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "type": "module",
   "bin": {
