@@ -11,8 +11,8 @@
 [![npm version](https://img.shields.io/npm/v/mcp-ai-hr-management-toolkit)](https://www.npmjs.com/package/mcp-ai-hr-management-toolkit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-<a href="https://glama.ai/mcp/servers/resume-parser-mcp">
-  <img width="380" height="200" src="https://glama.ai/mcp/servers/resume-parser-mcp/badge" alt="mcp-ai-hr-management-toolkit server" />
+<a href="https://glama.ai/mcp/servers/mcp-ai-hr-management-toolkit">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/mcp-ai-hr-management-toolkit/badge" alt="mcp-ai-hr-management-toolkit server" />
 </a>
 
 ---

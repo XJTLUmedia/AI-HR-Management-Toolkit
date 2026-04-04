@@ -33,13 +33,13 @@ export async function GET(req: Request) {
   if (!accept.includes("text/event-stream") && !accept.includes("application/json")) {
     return new Response(
       JSON.stringify({
-        name: "resume-parser",
+        name: "ai-hr-management-toolkit",
         version: "3.0.0",
         protocol: "MCP (Model Context Protocol)",
         transport: "Streamable HTTP",
         tools: 24,
         description:
-          "AI-powered resume parser MCP server. Connect via an MCP client (Claude Desktop, Cursor, VS Code Copilot) or use: npx @modelcontextprotocol/inspector https://ai-hr-management-toolkit.vercel.app/api/mcp",
+          "AI HR Management Toolkit MCP server. Connect via an MCP client (Claude Desktop, Cursor, VS Code Copilot) or use: npx @modelcontextprotocol/inspector https://ai-hr-management-toolkit.vercel.app/api/mcp",
       }),
       {
         status: 200,

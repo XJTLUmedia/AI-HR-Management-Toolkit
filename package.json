@@ -27,7 +27,7 @@
   },
   "type": "module",
   "bin": {
-    "resume-parser-mcp": "dist/mcp-stdio.js"
+    "mcp-ai-hr-management-toolkit": "dist/mcp-stdio.js"
   },
   "files": [
     "dist",

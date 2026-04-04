@@ -1,7 +1,7 @@
 {
   "$schema": "https://glama.ai/mcp/schemas/server.json",
-  "name": "resume-parser",
-  "display_name": "Resume Parser MCP Server",
+  "name": "ai-hr-management-toolkit",
+  "display_name": "AI HR Management Toolkit MCP Server",
   "description": "AI-powered resume parser with 20 MCP tools — parse PDFs/DOCX, extract skills, detect patterns, score candidates, and manage an ATS pipeline. Pure-data tools with no LLM dependency.",
   "version": "3.0.0",
   "repository": {

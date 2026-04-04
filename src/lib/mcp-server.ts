@@ -68,13 +68,13 @@ const TOOL_ANNOTATIONS: Record<string, {
 // Static resources exposed by this MCP server
 const MCP_RESOURCES = [
   {
-    uri: "mcp://resume-parser/guide",
+    uri: "mcp://ai-hr-management-toolkit/guide",
     name: "Usage Guide",
-    description: "How to use the AI Resume Parser & ATS Toolkit — tool overview, supported file formats, and workflow examples.",
+    description: "How to use the AI HR Management Toolkit — tool overview, supported file formats, and workflow examples.",
     mimeType: "text/plain",
   },
   {
-    uri: "mcp://resume-parser/schema/resume",
+    uri: "mcp://ai-hr-management-toolkit/schema/resume",
     name: "Resume Schema",
     description: "JSON schema describing the structured output format produced by the parse_resume tool.",
     mimeType: "application/json",
@@ -82,7 +82,7 @@ const MCP_RESOURCES = [
 ];
 
 const MCP_RESOURCE_CONTENT: Record<string, string> = {
-  "mcp://resume-parser/guide": [
+  "mcp://ai-hr-management-toolkit/guide": [
     "AI Resume Parser & ATS Toolkit — Usage Guide",
     "=============================================",
     "",
@@ -122,7 +122,7 @@ const MCP_RESOURCE_CONTENT: Record<string, string> = {
     "SUPPORTED FILE FORMATS: PDF, DOCX, TXT, Markdown, plain text, URL",
     "AI PROVIDERS: openai, anthropic, google, deepseek, glm, qwen, openrouter, opencodezen",
   ].join("\n"),
-  "mcp://resume-parser/schema/resume": JSON.stringify({
+  "mcp://ai-hr-management-toolkit/schema/resume": JSON.stringify({
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "ParsedResume",
     "type": "object",
@@ -252,7 +252,7 @@ const allTools = [
 
 export function createResumeParserMcpServer(): Server {
   const server = new Server(
-    { name: "resume-parser", version: "3.0.0" },
+    { name: "ai-hr-management-toolkit", version: "3.0.0" },
     { capabilities: { tools: {}, resources: {}, prompts: {} } }
   );
 
