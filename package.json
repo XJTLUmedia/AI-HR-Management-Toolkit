@@ -1,6 +1,7 @@
 {
   "name": "mcp-ai-hr-management-toolkit",
-  "version": "3.0.3",
+  "version": "3.0.5",
+  "mcpName": "io.github.XJTLUmedia/ai-hr-management-toolkit",
   "description": "AI-powered HR management toolkit with 24 MCP tools — parse PDFs/DOCX, extract skills, detect patterns, score candidates, and manage an ATS pipeline.",
   "keywords": [
     "mcp",
@@ -16,14 +17,14 @@
     "ai-tools"
   ],
   "license": "MIT",
-  "author": "",
+  "author": "XJTLUmedia",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "git+https://github.com/XJTLUmedia/AI-HR-Management-Toolkit.git"
   },
-  "homepage": "",
+  "homepage": "https://ai-hr-management-toolkit.vercel.app",
   "bugs": {
-    "url": ""
+    "url": "https://github.com/XJTLUmedia/AI-HR-Management-Toolkit/issues"
   },
   "publishConfig": {
     "access": "public"

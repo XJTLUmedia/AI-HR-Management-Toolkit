@@ -40,3 +40,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# MCP Registry auth tokens (never commit)
+.mcpregistry_github_token
+.mcpregistry_registry_token
+
+# MCP Registry server manifest (contains private config)
+server.json
