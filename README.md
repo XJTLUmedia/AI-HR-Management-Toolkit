@@ -36,10 +36,11 @@ You have 50 resumes to screen. Your AI assistant can reason about candidates —
 
 No installation needed. Point your MCP client at the package:
 
+**Claude Desktop** — Edit `%APPDATA%\Claude\claude_desktop_config.json` (Windows) or `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
 ```json
 {
   "mcpServers": {
-    "resume-parser": {
+    "ai-hr-management-toolkit": {
       "command": "npx",
       "args": ["-y", "mcp-ai-hr-management-toolkit"]
     }
@@ -47,15 +48,23 @@ No installation needed. Point your MCP client at the package:
 }
 ```
 
-**Claude Desktop** — Edit `%APPDATA%\Claude\claude_desktop_config.json` (Windows) or `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
+**Cursor** — Add to `.cursor/mcp.json` in your project root:
+```json
+{
+  "mcpServers": {
+    "ai-hr-management-toolkit": {
+      "command": "npx",
+      "args": ["-y", "mcp-ai-hr-management-toolkit"]
+    }
+  }
+}
+```
 
-**Cursor** — Add to `.cursor/mcp.json` in your project or global config
-
-**VS Code Copilot** — Create `.vscode/mcp.json`:
+**VS Code Copilot** — Create `.vscode/mcp.json` in your project root:
 ```json
 {
   "servers": {
-    "resume-parser": {
+    "ai-hr-management-toolkit": {
       "command": "npx",
       "args": ["-y", "mcp-ai-hr-management-toolkit"]
     }
@@ -63,24 +72,46 @@ No installation needed. Point your MCP client at the package:
 }
 ```
 
-**Windsurf / other MCP clients** — Same `npx` command pattern above
+> **VS Code users:** Run the `npx` command from a directory that contains a `package.json` (i.e. any project root). The `cwd` key in `.vscode/mcp.json` can override the working directory if needed.
+
+**Windsurf / other MCP clients** — Use the same `npx` pattern above.
 
 ---
 
 ## Installation Options
 
 ### Option 1: NPX (Zero-install, recommended)
+
+Works from any project directory (requires a `package.json` in the working directory):
+
 ```json
-{ "command": "npx", "args": ["-y", "mcp-ai-hr-management-toolkit"] }
+{
+  "mcpServers": {
+    "ai-hr-management-toolkit": {
+      "command": "npx",
+      "args": ["-y", "mcp-ai-hr-management-toolkit"]
+    }
+  }
+}
 ```
 
 ### Option 2: Global install
+
+Install once, use from any directory:
+
 ```bash
 npm install -g mcp-ai-hr-management-toolkit
 ```
 
 ```json
-{ "command": "mcp-ai-hr-management-toolkit" }
+{
+  "mcpServers": {
+    "ai-hr-management-toolkit": {
+      "command": "mcp-ai-hr-management-toolkit",
+      "args": []
+    }
+  }
+}
 ```
 
 ### Option 3: Remote HTTP endpoint

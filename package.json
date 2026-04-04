@@ -1,6 +1,6 @@
 {
   "name": "mcp-ai-hr-management-toolkit",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "AI-powered HR management toolkit with 24 MCP tools — parse PDFs/DOCX, extract skills, detect patterns, score candidates, and manage an ATS pipeline.",
   "keywords": [
     "mcp",
