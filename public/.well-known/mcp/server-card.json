@@ -1,0 +1,52 @@
+{
+  "serverInfo": {
+    "name": "resume-parser",
+    "version": "3.0.0",
+    "title": "AI Resume Parser & ATS Toolkit",
+    "description": "AI-powered resume parsing and applicant tracking system (ATS) management. Parse resumes from PDF/DOCX/TXT/URL, extract skills and experience, assess candidates against criteria, manage ATS pipeline with jobs/candidates/offers/interviews, and run batch operations.",
+    "websiteUrl": "https://ai-hr-management-toolkit.vercel.app"
+  },
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "openaiApiKey": {
+        "type": "string",
+        "title": "OpenAI API Key",
+        "description": "Optional OpenAI API key for AI-powered candidate assessment and structured extraction. If omitted, tools fall back to algorithmic analysis (NLP/NER/TF-IDF) — no AI calls required.",
+        "x-from": {
+          "header": "x-openai-api-key"
+        }
+      },
+      "aiProvider": {
+        "type": "string",
+        "title": "AI Provider",
+        "description": "AI provider to use when apiKey is supplied (openai, anthropic, google, deepseek, glm, qwen, openrouter, opencodezen). Defaults to openai.",
+        "default": "openai",
+        "enum": [
+          "openai",
+          "anthropic",
+          "google",
+          "deepseek",
+          "glm",
+          "qwen",
+          "openrouter",
+          "opencodezen"
+        ],
+        "x-from": {
+          "query": "provider"
+        }
+      },
+      "aiModel": {
+        "type": "string",
+        "title": "AI Model",
+        "description": "Specific AI model name (e.g. gpt-4o-mini, gpt-4o, claude-3-5-haiku-20241022). Defaults to gpt-4o-mini when using OpenAI.",
+        "default": "gpt-4o-mini",
+        "x-from": {
+          "query": "model"
+        }
+      }
+    }
+  },
+  "resources": [],
+  "prompts": []
+}
