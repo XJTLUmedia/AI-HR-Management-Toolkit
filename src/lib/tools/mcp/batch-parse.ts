@@ -34,6 +34,12 @@ export const mcpBatchParseTool = {
   handler: async (args: {
     files: Array<{ name: string; content: string; fileType: FileType }>;
   }) => {
+    if (args.files.length > 20) {
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify({ error: "Maximum 20 files per batch. Received " + args.files.length + "." }) }],
+      };
+    }
+
     const results: Array<{
       fileName: string;
       success: boolean;
@@ -96,7 +102,7 @@ export const mcpBatchParseTool = {
             next_steps: [
               "Review each resume's pipeline confidence to identify low-quality parses",
               "Compare top keywords across resumes to rank candidates by relevance",
-              "Use compute_similarity with a job description to score each candidate",
+              "Use analyze_resume with aspects=['similarity'] and a job description to score each candidate",
               "For detailed analysis of a specific resume, call inspect_pipeline with its rawText",
               "Use export_results to save the structured results as JSON or CSV",
             ],

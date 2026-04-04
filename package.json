@@ -1,8 +1,8 @@
 {
   "name": "mcp-ai-hr-management-toolkit",
-  "version": "3.0.5",
+  "version": "3.1.0",
   "mcpName": "io.github.XJTLUmedia/ai-hr-management-toolkit",
-  "description": "AI-powered HR management toolkit with 24 MCP tools — parse PDFs/DOCX, extract skills, detect patterns, score candidates, and manage an ATS pipeline.",
+  "description": "AI-powered HR management toolkit with 21 MCP tools — parse PDFs/DOCX, extract skills, detect patterns, score candidates, and manage an ATS pipeline.",
   "keywords": [
     "mcp",
     "model-context-protocol",

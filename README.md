@@ -1,6 +1,6 @@
 # AI HR Management Toolkit
 
-> AI-powered resume parser & full Applicant Tracking System with **24 MCP tools**. Parse PDFs, extract skills, detect patterns, score candidates, and manage a complete hiring pipeline — all from your AI assistant, no manual work required.
+> AI-powered resume parser & full Applicant Tracking System with **21 MCP tools**. Parse PDFs, extract skills, detect patterns, score candidates, and manage a complete hiring pipeline — all from your AI assistant, no manual work required.
 
 <img width="1889" height="781" alt="image" src="https://github.com/user-attachments/assets/572b4dd8-8fd4-469c-b71d-a4f513c4b466" />
 <img width="1896" height="635" alt="image" src="https://github.com/user-attachments/assets/aa0fc7c1-6373-4a48-9faf-3b15c42871f1" />
@@ -21,14 +21,14 @@
 
 You have 50 resumes to screen. Your AI assistant can reason about candidates — but it cannot open PDFs, extract structured data, or track pipeline stages. This toolkit bridges that gap.
 
-**Give your AI assistant 24 tools** covering the entire hiring workflow:
+**Give your AI assistant 21 tools** covering the entire hiring workflow:
 
 - Parse PDFs, DOCX, TXT, Markdown, and URLs into structured JSON
 - Extract skills, experience, keywords, and entities algorithmically
 - Score and rank candidates against job descriptions
 - Run a full ATS: jobs, candidates, interviews, offers, notes, and analytics
 
-**23 of 24 tools are 100% algorithmic** — no LLM calls, no API keys required. The AI calls tools, interprets the results, and delivers analysis. You just ask questions.
+**20 of 21 tools are 100% algorithmic** — no LLM calls, no API keys required. The AI calls tools, interprets the results, and delivers analysis. You just ask questions.
 
 ---
 
@@ -146,7 +146,7 @@ Web UI at `http://localhost:3000`. MCP endpoint at `http://localhost:3000/api/mc
 
 ---
 
-## All 24 MCP Tools
+## All 21 MCP Tools
 
 All tools return structured JSON with `next_steps` hints so the AI knows what to call next.
 
@@ -158,24 +158,19 @@ All tools return structured JSON with `next_steps` hints so the AI knows what to
 | `batch_parse_resumes` | Parse up to 20 files in one call, full pipeline on each | No |
 | `inspect_pipeline` | Run the 5-stage analysis pipeline → confidence scores, entity counts, data quality report | No |
 
-### Text Analysis & NLP
+### Unified Analysis
 
 | Tool | What it does | AI? |
 |------|-------------|:---:|
-| `extract_keywords` | TF-IDF keyword + bigram extraction with NER entity classification | No |
-| `detect_patterns` | Find date ranges, dollar/percent metrics, team sizes, section boundaries, career trajectory signals | No |
-| `classify_entities` | NER with 12 entity types (PERSON, ORG, SKILL, JOB_TITLE, LOCATION, DATE, …) + context disambiguation | No |
-| `extract_skills_structured` | Map extracted skills into 13 categories with proficiency estimation (beginner → expert) | No |
-| `extract_experience_structured` | Parse work history into structured timeline with start/end dates, achievements, and technologies | No |
-| `analyze_resume_comprehensive` | Master tool — full pipeline + entities + keywords + skills + experience in one call | No |
+| `analyze_resume` | Master analysis tool with selectable aspects: `keywords` (TF-IDF + bigrams), `patterns` (date ranges, metrics, team sizes, career trajectory), `entities` (NER with 12 types + context disambiguation), `skills` (13 categories with proficiency estimation), `experience` (structured timeline), `similarity` (cosine, Jaccard, TF-IDF overlap vs. job description), or `all` | No |
+
+> `analyze_resume` consolidates what were previously 7 separate tools (`extract_keywords`, `detect_patterns`, `classify_entities`, `extract_skills_structured`, `extract_experience_structured`, `compute_similarity`, `analyze_resume_comprehensive`) into a single entry point with aspect selection.
 
 ### Candidate Matching & Scoring
 
 | Tool | What it does | AI? |
 |------|-------------|:---:|
-| `compute_similarity` | Cosine, Jaccard, TF-IDF overlap, and skill-match scores between resume and job description | No |
 | `assess_candidate` | Score against up to 8 weighted criteria axes → weighted total + pass / review / reject decision | Optional |
-| `manage_candidates` | Rank, filter, compare, and recommend pipeline stage changes across a candidate pool | No |
 
 ### Export & Notifications
 
@@ -194,9 +189,8 @@ All tools return structured JSON with `next_steps` hints so the AI knows what to
 
 | Tool | What it does | AI? |
 |------|-------------|:---:|
-| `ats_manage_candidates` | CRUD + pipeline operations: add, update, move stage, bulk-move, filter by stage/score/tags | No |
-| `ats_pipeline_analytics` | Stage distribution, conversion rates, avg time-in-stage, bottleneck detection, drop-off analysis | No |
-| `ats_dashboard_stats` | One-call hiring health report: open roles, candidates by stage, interview load, offer acceptance rate | No |
+| `ats_manage_candidates` | CRUD + analytics: add, update, move stage, bulk-move, filter, rank, compare, recommend stage changes, summarize | No |
+| `ats_analytics` | Unified dashboard + pipeline analytics: stage distribution, conversion rates, avg time-in-stage, bottleneck detection, offer acceptance rate | No |
 | `ats_search` | Global full-text search across all ATS entities (candidates, jobs, interviews, offers, notes) | No |
 
 ### ATS — Interviews
@@ -212,6 +206,16 @@ All tools return structured JSON with `next_steps` hints so the AI knows what to
 |------|-------------|:---:|
 | `ats_manage_offers` | Full offer lifecycle: draft → pending → approved → sent → accepted / declined / expired | No |
 | `ats_manage_notes` | Add, update, search, and delete timestamped candidate notes | No |
+
+### ATS — Enterprise HR
+
+| Tool | What it does | AI? |
+|------|-------------|:---:|
+| `ats_compliance` | EEO/EEOC reporting, GDPR export/erasure, audit trail, data retention policies | No |
+| `ats_talent_pool` | Passive candidate talent pools (CRM): create pools, add/remove candidates, search, analytics | No |
+| `ats_scorecard` | Structured interview scorecards with weighted criteria, per-evaluator scores, aggregate rankings | No |
+| `ats_onboarding` | Post-hire onboarding checklists: tasks by category, assignees, progress tracking, overdue alerts | No |
+| `ats_communication` | Email templates with `{{variable}}` interpolation, send/preview, communication history, stats | No |
 
 ### Testing & Seeding
 
@@ -234,13 +238,9 @@ AI → parse_resume(file)
 AI → inspect_pipeline(rawText)
      → 5-stage confidence scores, entity classification
 
-AI → extract_skills_structured(text)
+AI → analyze_resume(text, aspects=["skills", "patterns", "similarity"], jobDescription=...)
      → 13 skill categories with proficiency levels
-
-AI → detect_patterns(text)
      → career trajectory, metrics, date ranges
-
-AI → compute_similarity(text, jobDescription)
      → cosine 0.74, skill match 82%, gap analysis
 
 AI synthesizes → "Strong match. 6 of 8 required skills present.
@@ -407,7 +407,7 @@ src/
 │   └── ats/                  # ATS-specific views (Kanban, Dashboard, Scheduler…)
 └── lib/
     ├── ai-model.ts           # Multi-provider model config (no env fallback)
-    ├── mcp-server.ts         # MCP server — registers all 24 tools
+    ├── mcp-server.ts         # MCP server — registers all 21 tools
     ├── schemas/
     │   ├── resume.ts         # Zod v4 ResumeSchema
     │   └── criteria.ts       # Assessment criteria schema
@@ -431,27 +431,24 @@ src/
         ├── inspect-pipeline.ts   # inspect_pipeline
         ├── export-results.ts     # export_results
         ├── send-email.ts         # send_email
-        └── mcp/                  # 20 MCP-specific tools
-            ├── extract-keywords.ts
-            ├── detect-patterns.ts
-            ├── classify-entities.ts
-            ├── compute-similarity.ts
-            ├── extract-skills-structured.ts
-            ├── extract-experience-structured.ts
-            ├── analyze-resume-comprehensive.ts
-            ├── batch-parse.ts
-            ├── assess-candidate.ts
-            ├── manage-candidates.ts
+        └── mcp/                  # 17 MCP-specific tools
+            ├── analyze-resume.ts     # analyze_resume (unified: keywords, patterns, entities, skills, experience, similarity)
+            ├── batch-parse.ts        # batch_parse_resumes
+            ├── assess-candidate.ts   # assess_candidate
+            ├── ats-manage-candidates.ts  # ats_manage_candidates (includes rank/filter/compare/summarize)
             ├── ats-manage-jobs.ts
-            ├── ats-manage-candidates.ts
-            ├── ats-schedule-interview.ts
             ├── ats-manage-offers.ts
             ├── ats-manage-notes.ts
+            ├── ats-analytics.ts      # ats_analytics (unified dashboard + pipeline)
+            ├── ats-schedule-interview.ts
             ├── ats-interview-feedback.ts
-            ├── ats-pipeline-analytics.ts
-            ├── ats-dashboard-stats.ts
             ├── ats-search.ts
-            └── ats-generate-demo-data.ts
+            ├── ats-generate-demo-data.ts
+            ├── ats-compliance.ts     # Enterprise: EEO / GDPR / audit
+            ├── ats-talent-pool.ts    # Enterprise: passive candidate CRM
+            ├── ats-scorecard.ts      # Enterprise: structured scorecards
+            ├── ats-onboarding.ts     # Enterprise: onboarding checklists
+            └── ats-communication.ts  # Enterprise: email templates & history
 ```
 
 ---

@@ -22,6 +22,15 @@ import {
   type Offer,
   type Activity,
   type Note,
+  type TalentPool,
+  type ScorecardTemplate,
+  type ScorecardEntry,
+  type OnboardingChecklist,
+  type EmailTemplate,
+  type CommunicationLogEntry,
+  type AuditLogEntry,
+  type EEORecord,
+  type ComplianceSettings,
   INITIAL_ATS_STATE,
   generateId,
   nowISO,
@@ -37,6 +46,20 @@ import {
   removeInterview as removeI,
   upsertOffer,
   removeOffer as removeO,
+  upsertTalentPool,
+  removeTalentPool as removeTP,
+  upsertScorecardTemplate,
+  removeScorecardTemplate as removeST,
+  upsertScorecardEntry,
+  removeScorecardEntry as removeSE,
+  upsertOnboardingChecklist,
+  removeOnboardingChecklist as removeOB,
+  upsertEmailTemplate,
+  removeEmailTemplate as removeET,
+  appendCommunicationLog,
+  appendAuditLog,
+  upsertEEORecord,
+  removeEEORecord as removeEEO,
 } from "./store";
 import { generateDemoData } from "./demo-data";
 
@@ -61,7 +84,31 @@ type ATSAction =
   | { type: "ADD_OFFER"; offer: Offer }
   | { type: "UPDATE_OFFER"; offer: Offer }
   | { type: "DELETE_OFFER"; id: string }
-  | { type: "IMPORT_STATE"; state: ATSState };
+  | { type: "IMPORT_STATE"; state: ATSState }
+  // Talent Pool
+  | { type: "ADD_TALENT_POOL"; pool: TalentPool }
+  | { type: "UPDATE_TALENT_POOL"; pool: TalentPool }
+  | { type: "DELETE_TALENT_POOL"; id: string }
+  // Scorecards
+  | { type: "ADD_SCORECARD_TEMPLATE"; template: ScorecardTemplate }
+  | { type: "UPDATE_SCORECARD_TEMPLATE"; template: ScorecardTemplate }
+  | { type: "DELETE_SCORECARD_TEMPLATE"; id: string }
+  | { type: "ADD_SCORECARD_ENTRY"; entry: ScorecardEntry }
+  | { type: "DELETE_SCORECARD_ENTRY"; id: string }
+  // Onboarding
+  | { type: "ADD_ONBOARDING_CHECKLIST"; checklist: OnboardingChecklist }
+  | { type: "UPDATE_ONBOARDING_CHECKLIST"; checklist: OnboardingChecklist }
+  | { type: "DELETE_ONBOARDING_CHECKLIST"; id: string }
+  // Communication
+  | { type: "ADD_EMAIL_TEMPLATE"; template: EmailTemplate }
+  | { type: "UPDATE_EMAIL_TEMPLATE"; template: EmailTemplate }
+  | { type: "DELETE_EMAIL_TEMPLATE"; id: string }
+  | { type: "LOG_COMMUNICATION"; entry: CommunicationLogEntry }
+  // Compliance
+  | { type: "LOG_AUDIT"; entry: AuditLogEntry }
+  | { type: "UPSERT_EEO_RECORD"; record: EEORecord }
+  | { type: "DELETE_EEO_RECORD"; candidateId: string }
+  | { type: "UPDATE_COMPLIANCE_SETTINGS"; settings: ComplianceSettings };
 
 function atsReducer(state: ATSState, action: ATSAction): ATSState {
   switch (action.type) {
@@ -155,6 +202,50 @@ function atsReducer(state: ATSState, action: ATSAction): ATSState {
       return upsertOffer(state, action.offer);
     case "DELETE_OFFER":
       return removeO(state, action.id);
+
+    // ── Talent Pool ──
+    case "ADD_TALENT_POOL":
+    case "UPDATE_TALENT_POOL":
+      return upsertTalentPool(state, action.pool);
+    case "DELETE_TALENT_POOL":
+      return removeTP(state, action.id);
+
+    // ── Scorecards ──
+    case "ADD_SCORECARD_TEMPLATE":
+    case "UPDATE_SCORECARD_TEMPLATE":
+      return upsertScorecardTemplate(state, action.template);
+    case "DELETE_SCORECARD_TEMPLATE":
+      return removeST(state, action.id);
+    case "ADD_SCORECARD_ENTRY":
+      return upsertScorecardEntry(state, action.entry);
+    case "DELETE_SCORECARD_ENTRY":
+      return removeSE(state, action.id);
+
+    // ── Onboarding ──
+    case "ADD_ONBOARDING_CHECKLIST":
+    case "UPDATE_ONBOARDING_CHECKLIST":
+      return upsertOnboardingChecklist(state, action.checklist);
+    case "DELETE_ONBOARDING_CHECKLIST":
+      return removeOB(state, action.id);
+
+    // ── Communication ──
+    case "ADD_EMAIL_TEMPLATE":
+    case "UPDATE_EMAIL_TEMPLATE":
+      return upsertEmailTemplate(state, action.template);
+    case "DELETE_EMAIL_TEMPLATE":
+      return removeET(state, action.id);
+    case "LOG_COMMUNICATION":
+      return appendCommunicationLog(state, action.entry);
+
+    // ── Compliance ──
+    case "LOG_AUDIT":
+      return appendAuditLog(state, action.entry);
+    case "UPSERT_EEO_RECORD":
+      return upsertEEORecord(state, action.record);
+    case "DELETE_EEO_RECORD":
+      return removeEEO(state, action.candidateId);
+    case "UPDATE_COMPLIANCE_SETTINGS":
+      return { ...state, complianceSettings: action.settings };
 
     default:
       return state;

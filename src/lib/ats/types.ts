@@ -189,6 +189,160 @@ export interface Offer {
   updatedAt: string;
 }
 
+// ──────────────────────────── Compliance & Audit ─────────────────
+
+export type AuditAction =
+  | "candidate_created"
+  | "candidate_updated"
+  | "candidate_deleted"
+  | "candidate_stage_change"
+  | "candidate_data_exported"
+  | "candidate_data_erased"
+  | "job_created"
+  | "job_updated"
+  | "job_closed"
+  | "interview_scheduled"
+  | "interview_feedback"
+  | "offer_created"
+  | "offer_updated"
+  | "scorecard_submitted"
+  | "pool_updated"
+  | "communication_sent"
+  | "login"
+  | "settings_changed";
+
+export interface AuditLogEntry {
+  id: string;
+  action: AuditAction;
+  entityType: "candidate" | "job" | "interview" | "offer" | "scorecard" | "pool" | "system";
+  entityId: string;
+  actor: string;
+  description: string;
+  metadata?: Record<string, unknown>;
+  timestamp: string;
+}
+
+export interface EEORecord {
+  candidateId: string;
+  gender?: "male" | "female" | "non-binary" | "prefer-not-to-say";
+  ethnicity?: string;
+  veteranStatus?: "yes" | "no" | "prefer-not-to-say";
+  disabilityStatus?: "yes" | "no" | "prefer-not-to-say";
+  collectedAt: string;
+}
+
+export interface DataRetentionPolicy {
+  entityType: string;
+  retentionDays: number;
+  autoDelete: boolean;
+}
+
+export interface ComplianceSettings {
+  gdprEnabled: boolean;
+  eeoTrackingEnabled: boolean;
+  retentionPolicies: DataRetentionPolicy[];
+  anonymizeRejectedAfterDays: number;
+}
+
+// ──────────────────────────── Talent Pool ─────────────────────────
+
+export interface TalentPool {
+  id: string;
+  name: string;
+  description: string;
+  tags: string[];
+  candidateIds: string[];
+  source?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ──────────────────────────── Structured Scorecards ──────────────
+
+export interface ScorecardCriterion {
+  id: string;
+  name: string;
+  description: string;
+  weight: number; // 0-1
+}
+
+export interface ScorecardTemplate {
+  id: string;
+  name: string;
+  jobId?: string;
+  interviewType?: InterviewType;
+  criteria: ScorecardCriterion[];
+  createdAt: string;
+}
+
+export interface ScorecardRating {
+  criterionId: string;
+  score: number; // 1-5
+  comment?: string;
+}
+
+export interface ScorecardEntry {
+  id: string;
+  templateId: string;
+  candidateId: string;
+  interviewId?: string;
+  evaluator: string;
+  ratings: ScorecardRating[];
+  overallRecommendation: "strong-hire" | "hire" | "no-hire" | "strong-no-hire";
+  notes: string;
+  submittedAt: string;
+}
+
+// ──────────────────────────── Onboarding ─────────────────────────
+
+export type OnboardingTaskStatus = "pending" | "in-progress" | "completed" | "skipped";
+
+export interface OnboardingTask {
+  id: string;
+  title: string;
+  description: string;
+  assignee?: string;
+  dueDate?: string;
+  status: OnboardingTaskStatus;
+  completedAt?: string;
+  category: "paperwork" | "it-setup" | "training" | "introduction" | "compliance" | "other";
+}
+
+export interface OnboardingChecklist {
+  id: string;
+  candidateId: string;
+  jobId: string;
+  tasks: OnboardingTask[];
+  startDate: string;
+  completedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ──────────────────────────── Communication ──────────────────────
+
+export interface EmailTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  body: string; // supports {{firstName}}, {{jobTitle}}, {{company}}, etc.
+  category: "application-received" | "interview-invite" | "rejection" | "offer" | "onboarding" | "follow-up" | "custom";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CommunicationLogEntry {
+  id: string;
+  candidateId: string;
+  templateId?: string;
+  channel: "email" | "sms" | "phone" | "in-app";
+  subject: string;
+  body: string;
+  direction: "outbound" | "inbound";
+  sentAt: string;
+  status: "sent" | "delivered" | "opened" | "bounced" | "failed";
+}
+
 // ──────────────────────────── ATS State ──────────────────────────
 
 export interface ATSState {
@@ -196,16 +350,44 @@ export interface ATSState {
   jobs: Record<string, Job>;
   interviews: Record<string, Interview>;
   offers: Record<string, Offer>;
+  talentPools: Record<string, TalentPool>;
+  scorecardTemplates: Record<string, ScorecardTemplate>;
+  scorecardEntries: Record<string, ScorecardEntry>;
+  onboardingChecklists: Record<string, OnboardingChecklist>;
+  emailTemplates: Record<string, EmailTemplate>;
+  communicationLog: CommunicationLogEntry[];
+  auditLog: AuditLogEntry[];
+  eeoRecords: Record<string, EEORecord>;
+  complianceSettings: ComplianceSettings;
   settings: {
     defaultPipeline: PipelineStage[];
   };
 }
+
+export const DEFAULT_COMPLIANCE_SETTINGS: ComplianceSettings = {
+  gdprEnabled: false,
+  eeoTrackingEnabled: false,
+  retentionPolicies: [
+    { entityType: "candidate", retentionDays: 730, autoDelete: false },
+    { entityType: "application", retentionDays: 365, autoDelete: false },
+  ],
+  anonymizeRejectedAfterDays: 180,
+};
 
 export const INITIAL_ATS_STATE: ATSState = {
   candidates: {},
   jobs: {},
   interviews: {},
   offers: {},
+  talentPools: {},
+  scorecardTemplates: {},
+  scorecardEntries: {},
+  onboardingChecklists: {},
+  emailTemplates: {},
+  communicationLog: [],
+  auditLog: [],
+  eeoRecords: {},
+  complianceSettings: DEFAULT_COMPLIANCE_SETTINGS,
   settings: {
     defaultPipeline: DEFAULT_PIPELINE_STAGES,
   },
@@ -219,6 +401,11 @@ export type ATSView =
   | "jobs"
   | "interviews"
   | "offers"
+  | "talent-pool"
+  | "scorecards"
+  | "onboarding"
+  | "compliance"
+  | "communications"
   | "settings"
   | "parser";
 

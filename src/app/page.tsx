@@ -16,6 +16,11 @@ import { JobList } from "@/components/ats/JobList";
 import { JobEditor } from "@/components/ats/JobEditor";
 import { InterviewScheduler } from "@/components/ats/InterviewScheduler";
 import { OfferManager } from "@/components/ats/OfferManager";
+import CompliancePanel from "@/components/ats/CompliancePanel";
+import TalentPoolManager from "@/components/ats/TalentPoolManager";
+import ScorecardManager from "@/components/ats/ScorecardManager";
+import OnboardingTracker from "@/components/ats/OnboardingTracker";
+import CommunicationCenter from "@/components/ats/CommunicationCenter";
 
 // Existing resume parser components
 import { FileUpload } from "@/components/FileUpload";
@@ -404,7 +409,30 @@ function SettingsView() {
   function handleClearAll() {
     dispatch({
       type: "IMPORT_STATE",
-      state: { candidates: {}, jobs: {}, interviews: {}, offers: {}, settings: { defaultPipeline: DEFAULT_PIPELINE_STAGES } },
+      state: {
+        candidates: {},
+        jobs: {},
+        interviews: {},
+        offers: {},
+        talentPools: {},
+        scorecardTemplates: {},
+        scorecardEntries: {},
+        onboardingChecklists: {},
+        emailTemplates: {},
+        communicationLog: [],
+        auditLog: [],
+        eeoRecords: {},
+        complianceSettings: {
+          gdprEnabled: false,
+          eeoTrackingEnabled: false,
+          retentionPolicies: [
+            { entityType: "candidate", retentionDays: 730, autoDelete: false },
+            { entityType: "application", retentionDays: 365, autoDelete: false },
+          ],
+          anonymizeRejectedAfterDays: 180,
+        },
+        settings: { defaultPipeline: DEFAULT_PIPELINE_STAGES },
+      },
     });
     setConfirmClear(false);
   }
@@ -749,6 +777,16 @@ export default function Home() {
         return <InterviewScheduler />;
       case "offers":
         return <OfferManager />;
+      case "talent-pool":
+        return <TalentPoolManager />;
+      case "scorecards":
+        return <ScorecardManager />;
+      case "onboarding":
+        return <OnboardingTracker />;
+      case "compliance":
+        return <CompliancePanel />;
+      case "communications":
+        return <CommunicationCenter />;
       case "parser":
         return <ResumeParserView />;
       case "settings":

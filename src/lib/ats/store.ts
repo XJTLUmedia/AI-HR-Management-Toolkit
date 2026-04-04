@@ -11,7 +11,16 @@ import {
   type Job,
   type Interview,
   type Offer,
+  type TalentPool,
+  type ScorecardTemplate,
+  type ScorecardEntry,
+  type OnboardingChecklist,
+  type EmailTemplate,
+  type CommunicationLogEntry,
+  type AuditLogEntry,
+  type EEORecord,
   INITIAL_ATS_STATE,
+  DEFAULT_COMPLIANCE_SETTINGS,
 } from "./types";
 
 const STORAGE_KEY = "ats_state";
@@ -29,6 +38,15 @@ export function loadState(): ATSState {
       jobs: parsed.jobs ?? {},
       interviews: parsed.interviews ?? {},
       offers: parsed.offers ?? {},
+      talentPools: parsed.talentPools ?? {},
+      scorecardTemplates: parsed.scorecardTemplates ?? {},
+      scorecardEntries: parsed.scorecardEntries ?? {},
+      onboardingChecklists: parsed.onboardingChecklists ?? {},
+      emailTemplates: parsed.emailTemplates ?? {},
+      communicationLog: parsed.communicationLog ?? [],
+      auditLog: parsed.auditLog ?? [],
+      eeoRecords: parsed.eeoRecords ?? {},
+      complianceSettings: parsed.complianceSettings ?? DEFAULT_COMPLIANCE_SETTINGS,
       settings: parsed.settings ?? INITIAL_ATS_STATE.settings,
     };
   } catch {
@@ -209,9 +227,94 @@ export function importATSData(json: string): ATSState | null {
       jobs: data.jobs ?? {},
       interviews: data.interviews ?? {},
       offers: data.offers ?? {},
+      talentPools: data.talentPools ?? {},
+      scorecardTemplates: data.scorecardTemplates ?? {},
+      scorecardEntries: data.scorecardEntries ?? {},
+      onboardingChecklists: data.onboardingChecklists ?? {},
+      emailTemplates: data.emailTemplates ?? {},
+      communicationLog: data.communicationLog ?? [],
+      auditLog: data.auditLog ?? [],
+      eeoRecords: data.eeoRecords ?? {},
+      complianceSettings: data.complianceSettings ?? DEFAULT_COMPLIANCE_SETTINGS,
       settings: data.settings ?? INITIAL_ATS_STATE.settings,
     };
   } catch {
     return null;
   }
+}
+
+// ──────────────────────────── Talent Pool CRUD ───────────────────
+
+export function upsertTalentPool(state: ATSState, pool: TalentPool): ATSState {
+  return { ...state, talentPools: { ...state.talentPools, [pool.id]: pool } };
+}
+
+export function removeTalentPool(state: ATSState, id: string): ATSState {
+  const { [id]: _, ...rest } = state.talentPools;
+  return { ...state, talentPools: rest };
+}
+
+// ──────────────────────────── Scorecard CRUD ─────────────────────
+
+export function upsertScorecardTemplate(state: ATSState, t: ScorecardTemplate): ATSState {
+  return { ...state, scorecardTemplates: { ...state.scorecardTemplates, [t.id]: t } };
+}
+
+export function removeScorecardTemplate(state: ATSState, id: string): ATSState {
+  const { [id]: _, ...rest } = state.scorecardTemplates;
+  return { ...state, scorecardTemplates: rest };
+}
+
+export function upsertScorecardEntry(state: ATSState, e: ScorecardEntry): ATSState {
+  return { ...state, scorecardEntries: { ...state.scorecardEntries, [e.id]: e } };
+}
+
+export function removeScorecardEntry(state: ATSState, id: string): ATSState {
+  const { [id]: _, ...rest } = state.scorecardEntries;
+  return { ...state, scorecardEntries: rest };
+}
+
+// ──────────────────────────── Onboarding CRUD ────────────────────
+
+export function upsertOnboardingChecklist(state: ATSState, c: OnboardingChecklist): ATSState {
+  return { ...state, onboardingChecklists: { ...state.onboardingChecklists, [c.id]: c } };
+}
+
+export function removeOnboardingChecklist(state: ATSState, id: string): ATSState {
+  const { [id]: _, ...rest } = state.onboardingChecklists;
+  return { ...state, onboardingChecklists: rest };
+}
+
+// ──────────────────────────── Email Template CRUD ────────────────
+
+export function upsertEmailTemplate(state: ATSState, t: EmailTemplate): ATSState {
+  return { ...state, emailTemplates: { ...state.emailTemplates, [t.id]: t } };
+}
+
+export function removeEmailTemplate(state: ATSState, id: string): ATSState {
+  const { [id]: _, ...rest } = state.emailTemplates;
+  return { ...state, emailTemplates: rest };
+}
+
+// ──────────────────────────── Communication Log ─────────────────
+
+export function appendCommunicationLog(state: ATSState, entry: CommunicationLogEntry): ATSState {
+  return { ...state, communicationLog: [...state.communicationLog, entry] };
+}
+
+// ──────────────────────────── Audit Log ──────────────────────────
+
+export function appendAuditLog(state: ATSState, entry: AuditLogEntry): ATSState {
+  return { ...state, auditLog: [...state.auditLog, entry] };
+}
+
+// ──────────────────────────── EEO Records ────────────────────────
+
+export function upsertEEORecord(state: ATSState, record: EEORecord): ATSState {
+  return { ...state, eeoRecords: { ...state.eeoRecords, [record.candidateId]: record } };
+}
+
+export function removeEEORecord(state: ATSState, candidateId: string): ATSState {
+  const { [candidateId]: _, ...rest } = state.eeoRecords;
+  return { ...state, eeoRecords: rest };
 }

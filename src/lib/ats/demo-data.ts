@@ -380,6 +380,23 @@ export function generateDemoData(): ATSState {
     jobs,
     interviews,
     offers,
+    talentPools: {},
+    scorecardTemplates: {},
+    scorecardEntries: {},
+    onboardingChecklists: {},
+    emailTemplates: {},
+    communicationLog: [],
+    auditLog: [],
+    eeoRecords: {},
+    complianceSettings: {
+      gdprEnabled: false,
+      eeoTrackingEnabled: false,
+      retentionPolicies: [
+        { entityType: "candidate", retentionDays: 730, autoDelete: false },
+        { entityType: "application", retentionDays: 365, autoDelete: false },
+      ],
+      anonymizeRejectedAfterDays: 180,
+    },
     settings: {
       defaultPipeline: DEFAULT_PIPELINE_STAGES,
     },

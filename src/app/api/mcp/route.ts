@@ -37,7 +37,7 @@ export async function GET(req: Request) {
         version: "3.0.0",
         protocol: "MCP (Model Context Protocol)",
         transport: "Streamable HTTP",
-        tools: 24,
+        tools: 21,
         description:
           "AI HR Management Toolkit MCP server. Connect via an MCP client (Claude Desktop, Cursor, VS Code Copilot) or use: npx @modelcontextprotocol/inspector https://ai-hr-management-toolkit.vercel.app/api/mcp",
       }),
