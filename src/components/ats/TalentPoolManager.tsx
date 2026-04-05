@@ -32,6 +32,11 @@ export default function TalentPoolManager() {
   const [newPoolDesc, setNewPoolDesc] = useState("");
   const [newPoolTags, setNewPoolTags] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  // Edit pool state
+  const [editingPoolId, setEditingPoolId] = useState<string | null>(null);
+  const [editPoolName, setEditPoolName] = useState("");
+  const [editPoolDesc, setEditPoolDesc] = useState("");
+  const [editPoolTags, setEditPoolTags] = useState("");
 
   const pools = useMemo(() => Object.values(state.talentPools ?? {}), [state.talentPools]);
   const candidates = useMemo(() => Object.values(state.candidates ?? {}), [state.candidates]);
@@ -113,6 +118,31 @@ export default function TalentPoolManager() {
   function handleDeletePool(poolId: string) {
     dispatch({ type: "DELETE_TALENT_POOL", id: poolId });
     if (selectedPoolId === poolId) setSelectedPoolId(null);
+    if (editingPoolId === poolId) setEditingPoolId(null);
+  }
+
+  function startEditPool(pool: (typeof pools)[0]) {
+    setEditingPoolId(pool.id);
+    setEditPoolName(pool.name);
+    setEditPoolDesc(pool.description);
+    setEditPoolTags(pool.tags.join(", "));
+  }
+
+  function handleSavePool() {
+    if (!editingPoolId || !editPoolName.trim()) return;
+    const existing = (state.talentPools ?? {})[editingPoolId];
+    if (!existing) return;
+    dispatch({
+      type: "UPDATE_TALENT_POOL",
+      pool: {
+        ...existing,
+        name: editPoolName.trim(),
+        description: editPoolDesc.trim(),
+        tags: editPoolTags.split(",").map((t) => t.trim()).filter(Boolean),
+        updatedAt: new Date().toISOString(),
+      },
+    });
+    setEditingPoolId(null);
   }
 
   return (
@@ -197,7 +227,13 @@ export default function TalentPoolManager() {
                   ))}
                 </div>
               )}
-              <div className="flex justify-end mt-2">
+              <div className="flex justify-end gap-2 mt-2">
+                <button
+                  onClick={(e) => { e.stopPropagation(); startEditPool(pool); }}
+                  className="text-xs text-violet-400 hover:text-violet-300"
+                >
+                  Edit
+                </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); handleDeletePool(pool.id); }}
                   className="text-xs text-red-400 hover:text-red-300"
@@ -213,11 +249,28 @@ export default function TalentPoolManager() {
           {selectedPool ? (
             <div className="space-y-4">
               <div className="bg-zinc-900 rounded-lg p-5 border border-zinc-800">
-                <h3 className="text-lg font-medium text-white">{selectedPool.name}</h3>
-                {selectedPool.description && <p className="text-sm text-zinc-400 mt-1">{selectedPool.description}</p>}
-                <p className="text-xs text-zinc-500 mt-2">
-                  Created {new Date(selectedPool.createdAt).toLocaleDateString()} · Source: {selectedPool.source ?? "manual"}
-                </p>
+                {editingPoolId === selectedPool.id ? (
+                  <div className="space-y-3">
+                    <input value={editPoolName} onChange={(e) => setEditPoolName(e.target.value)} placeholder="Pool name" className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-violet-500" />
+                    <input value={editPoolDesc} onChange={(e) => setEditPoolDesc(e.target.value)} placeholder="Description" className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none" />
+                    <input value={editPoolTags} onChange={(e) => setEditPoolTags(e.target.value)} placeholder="Tags (comma-separated)" className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none" />
+                    <div className="flex gap-2">
+                      <button onClick={handleSavePool} className="px-4 py-2 text-sm bg-violet-600 text-white rounded-lg hover:bg-violet-500">Save</button>
+                      <button onClick={() => setEditingPoolId(null)} className="px-4 py-2 text-sm text-zinc-400 hover:text-white">Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium text-white">{selectedPool.name}</h3>
+                      <button onClick={() => startEditPool(selectedPool)} className="text-xs text-violet-400 hover:text-violet-300">Edit</button>
+                    </div>
+                    {selectedPool.description && <p className="text-sm text-zinc-400 mt-1">{selectedPool.description}</p>}
+                    <p className="text-xs text-zinc-500 mt-2">
+                      Created {new Date(selectedPool.createdAt).toLocaleDateString()} · Source: {selectedPool.source ?? "manual"}
+                    </p>
+                  </>
+                )}
               </div>
 
               <div className="bg-zinc-900 rounded-lg p-4 border border-zinc-800">

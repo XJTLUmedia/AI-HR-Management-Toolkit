@@ -24,11 +24,10 @@ function ClipboardIcon() {
 
 const SCORE_COLORS = ["", "text-red-400", "text-orange-400", "text-yellow-400", "text-blue-400", "text-emerald-400"];
 const REC_LABELS: Record<string, { label: string; color: string }> = {
-  strong_yes: { label: "Strong Yes", color: "text-emerald-400" },
-  yes: { label: "Yes", color: "text-blue-400" },
-  neutral: { label: "Neutral", color: "text-yellow-400" },
-  no: { label: "No", color: "text-orange-400" },
-  strong_no: { label: "Strong No", color: "text-red-400" },
+  "strong-hire": { label: "Strong Hire", color: "text-emerald-400" },
+  hire: { label: "Hire", color: "text-blue-400" },
+  "no-hire": { label: "No Hire", color: "text-orange-400" },
+  "strong-no-hire": { label: "Strong No Hire", color: "text-red-400" },
 };
 
 export default function ScorecardManager() {
@@ -39,6 +38,15 @@ export default function ScorecardManager() {
   const [newCriteria, setNewCriteria] = useState<{ name: string; weight: string }[]>([
     { name: "", weight: "0.25" },
   ]);
+  // Edit template state
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
+  const [editTemplateName, setEditTemplateName] = useState("");
+  const [editTemplateCriteria, setEditTemplateCriteria] = useState<{ id: string; name: string; weight: string; description: string }[]>([]);
+  // Edit entry state
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+  const [editEntryRatings, setEditEntryRatings] = useState<{ criterionId: string; score: number; notes: string }[]>([]);
+  const [editEntryRecommendation, setEditEntryRecommendation] = useState("");
+  const [editEntryNotes, setEditEntryNotes] = useState("");
 
   const templates = useMemo(() => Object.values(state.scorecardTemplates ?? {}), [state.scorecardTemplates]);
   const entries = useMemo(() => Object.values(state.scorecardEntries ?? {}), [state.scorecardEntries]);
@@ -99,6 +107,70 @@ export default function ScorecardManager() {
       };
     }).sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
   }, [entries, state.scorecardTemplates, candidates]);
+
+  function startEditTemplate(tmpl: (typeof templates)[0]) {
+    setEditingTemplateId(tmpl.id);
+    setEditTemplateName(tmpl.name);
+    setEditTemplateCriteria(tmpl.criteria.map((c) => ({ id: c.id, name: c.name, weight: String(c.weight), description: c.description || "" })));
+  }
+
+  function handleSaveTemplate() {
+    if (!editingTemplateId || !editTemplateName.trim()) return;
+    const totalWeight = editTemplateCriteria.reduce((s, c) => s + Number(c.weight), 0);
+    if (Math.abs(totalWeight - 1) > 0.05) {
+      alert(`Criteria weights must sum to 1.0 (currently ${totalWeight.toFixed(2)})`);
+      return;
+    }
+    const existing = (state.scorecardTemplates ?? {})[editingTemplateId];
+    dispatch({
+      type: "ADD_SCORECARD_TEMPLATE",
+      template: {
+        ...existing,
+        name: editTemplateName.trim(),
+        criteria: editTemplateCriteria.map((c) => ({
+          id: c.id,
+          name: c.name,
+          description: c.description,
+          weight: Number(c.weight),
+        })),
+      },
+    });
+    setEditingTemplateId(null);
+  }
+
+  function addEditCriterion() {
+    setEditTemplateCriteria([...editTemplateCriteria, {
+      id: `crit_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      name: "", weight: "0.25", description: "",
+    }]);
+  }
+
+  function removeEditCriterion(idx: number) {
+    setEditTemplateCriteria(editTemplateCriteria.filter((_, i) => i !== idx));
+  }
+
+  function startEditEntry(entry: (typeof scoredEntries)[0]) {
+    setEditingEntryId(entry.id);
+    setEditEntryRatings(entry.ratings.map((r) => ({ criterionId: r.criterionId, score: r.score, notes: r.comment || "" })));
+    setEditEntryRecommendation(entry.overallRecommendation);
+    setEditEntryNotes(entry.notes || "");
+  }
+
+  function handleSaveEntry() {
+    if (!editingEntryId) return;
+    const existing = (state.scorecardEntries ?? {})[editingEntryId];
+    if (!existing) return;
+    dispatch({
+      type: "UPDATE_SCORECARD_ENTRY",
+      entry: {
+        ...existing,
+        ratings: editEntryRatings.map((r) => ({ criterionId: r.criterionId, score: r.score, comment: r.notes || undefined })),
+        overallRecommendation: editEntryRecommendation as "strong-hire" | "hire" | "no-hire" | "strong-no-hire",
+        notes: editEntryNotes,
+      },
+    });
+    setEditingEntryId(null);
+  }
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
@@ -193,26 +265,83 @@ export default function ScorecardManager() {
           ) : (
             templates.map((tmpl) => (
               <div key={tmpl.id} className="bg-zinc-900 rounded-lg p-4 border border-zinc-800">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-sm font-medium text-white">{tmpl.name}</span>
-                    {tmpl.jobId && <span className="text-xs text-zinc-500 ml-2">Job: {tmpl.jobId}</span>}
-                    {tmpl.interviewType && <span className="text-xs text-zinc-500 ml-2">Type: {tmpl.interviewType}</span>}
+                {editingTemplateId === tmpl.id ? (
+                  <div className="space-y-3">
+                    <input
+                      value={editTemplateName}
+                      onChange={(e) => setEditTemplateName(e.target.value)}
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    />
+                    <div className="space-y-2">
+                      {editTemplateCriteria.map((c, idx) => (
+                        <div key={c.id} className="flex gap-2">
+                          <input
+                            placeholder="Criterion name"
+                            value={c.name}
+                            onChange={(e) => {
+                              const updated = [...editTemplateCriteria];
+                              updated[idx] = { ...updated[idx], name: e.target.value };
+                              setEditTemplateCriteria(updated);
+                            }}
+                            className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"
+                          />
+                          <input
+                            type="number" step="0.05" min="0" max="1"
+                            value={c.weight}
+                            onChange={(e) => {
+                              const updated = [...editTemplateCriteria];
+                              updated[idx] = { ...updated[idx], weight: e.target.value };
+                              setEditTemplateCriteria(updated);
+                            }}
+                            className="w-24 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"
+                          />
+                          {editTemplateCriteria.length > 1 && (
+                            <button onClick={() => removeEditCriterion(idx)} className="text-xs text-red-400 hover:text-red-300 px-2">✕</button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <button onClick={addEditCriterion} className="text-xs text-amber-400 hover:text-amber-300">+ Add Criterion</button>
+                      <span className="text-xs text-zinc-500">Total: {editTemplateCriteria.reduce((s, c) => s + Number(c.weight), 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={handleSaveTemplate} className="px-4 py-2 text-sm bg-amber-600 text-white rounded-lg hover:bg-amber-500">Save</button>
+                      <button onClick={() => setEditingTemplateId(null)} className="px-4 py-2 text-sm text-zinc-400 hover:text-white">Cancel</button>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => dispatch({ type: "DELETE_SCORECARD_TEMPLATE", id: tmpl.id })}
-                    className="text-xs text-red-400 hover:text-red-300"
-                  >
-                    Delete
-                  </button>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {tmpl.criteria.map((c) => (
-                    <span key={c.id} className="px-2 py-1 text-xs bg-zinc-800 text-zinc-300 rounded">
-                      {c.name} <span className="text-zinc-500">({(c.weight * 100).toFixed(0)}%)</span>
-                    </span>
-                  ))}
-                </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-medium text-white">{tmpl.name}</span>
+                        {tmpl.jobId && <span className="text-xs text-zinc-500 ml-2">Job: {tmpl.jobId}</span>}
+                        {tmpl.interviewType && <span className="text-xs text-zinc-500 ml-2">Type: {tmpl.interviewType}</span>}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => startEditTemplate(tmpl)}
+                          className="text-xs text-amber-400 hover:text-amber-300"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => dispatch({ type: "DELETE_SCORECARD_TEMPLATE", id: tmpl.id })}
+                          className="text-xs text-red-400 hover:text-red-300"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {tmpl.criteria.map((c) => (
+                        <span key={c.id} className="px-2 py-1 text-xs bg-zinc-800 text-zinc-300 rounded">
+                          {c.name} <span className="text-zinc-500">({(c.weight * 100).toFixed(0)}%)</span>
+                        </span>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             ))
           )}
@@ -226,35 +355,98 @@ export default function ScorecardManager() {
           ) : (
             scoredEntries.map((entry) => (
               <div key={entry.id} className="bg-zinc-900 rounded-lg p-4 border border-zinc-800">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-sm font-medium text-white">{entry.candidateName}</span>
-                    <span className="text-xs text-zinc-500 ml-2">{entry.templateName}</span>
+                {editingEntryId === entry.id ? (
+                  <div className="space-y-3">
+                    <div className="text-sm text-white font-medium">{entry.candidateName} — {entry.templateName}</div>
+                    <div className="space-y-2">
+                      {editEntryRatings.map((r, idx) => {
+                        const tmpl = (state.scorecardTemplates ?? {})[entry.templateId];
+                        const critName = tmpl?.criteria.find((c) => c.id === r.criterionId)?.name ?? r.criterionId;
+                        return (
+                          <div key={r.criterionId} className="flex items-center gap-2">
+                            <span className="text-xs text-zinc-400 w-32 truncate">{critName}</span>
+                            <select
+                              value={r.score}
+                              onChange={(e) => {
+                                const updated = [...editEntryRatings];
+                                updated[idx] = { ...updated[idx], score: Number(e.target.value) };
+                                setEditEntryRatings(updated);
+                              }}
+                              className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-white"
+                            >
+                              {[1, 2, 3, 4, 5].map((s) => (<option key={s} value={s}>{s}</option>))}
+                            </select>
+                            <input
+                              value={r.notes}
+                              onChange={(e) => {
+                                const updated = [...editEntryRatings];
+                                updated[idx] = { ...updated[idx], notes: e.target.value };
+                                setEditEntryRatings(updated);
+                              }}
+                              placeholder="Notes"
+                              className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-white placeholder-zinc-500 focus:outline-none"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="flex gap-2 items-center">
+                      <label className="text-xs text-zinc-400">Recommendation:</label>
+                      <select
+                        value={editEntryRecommendation}
+                        onChange={(e) => setEditEntryRecommendation(e.target.value)}
+                        className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-white"
+                      >
+                        {Object.entries(REC_LABELS).map(([k, v]) => (<option key={k} value={k}>{v.label}</option>))}
+                      </select>
+                    </div>
+                    <textarea
+                      value={editEntryNotes}
+                      onChange={(e) => setEditEntryNotes(e.target.value)}
+                      placeholder="Overall notes"
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none"
+                      rows={2}
+                    />
+                    <div className="flex gap-2">
+                      <button onClick={handleSaveEntry} className="px-4 py-2 text-sm bg-amber-600 text-white rounded-lg hover:bg-amber-500">Save</button>
+                      <button onClick={() => setEditingEntryId(null)} className="px-4 py-2 text-sm text-zinc-400 hover:text-white">Cancel</button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-mono text-amber-400">{entry.weightedScore.toFixed(2)}/5</span>
-                    <span className={`text-xs font-medium ${REC_LABELS[entry.overallRecommendation]?.color ?? "text-zinc-400"}`}>
-                      {REC_LABELS[entry.overallRecommendation]?.label ?? entry.overallRecommendation}
-                    </span>
-                  </div>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {entry.ratings.map((r) => {
-                    const tmpl = (state.scorecardTemplates ?? {})[entry.templateId];
-                    const critName = tmpl?.criteria.find((c) => c.id === r.criterionId)?.name ?? r.criterionId;
-                    return (
-                      <span key={r.criterionId} className="px-2 py-1 text-xs bg-zinc-800 rounded">
-                        <span className="text-zinc-400">{critName}:</span>{" "}
-                        <span className={SCORE_COLORS[r.score] ?? "text-zinc-300"}>{r.score}</span>
-                      </span>
-                    );
-                  })}
-                </div>
-                <div className="flex items-center justify-between mt-2 text-xs text-zinc-500">
-                  <span>By: {entry.evaluator}</span>
-                  <span>{new Date(entry.submittedAt).toLocaleDateString()}</span>
-                </div>
-                {entry.notes && <p className="text-xs text-zinc-400 mt-1 italic">{entry.notes}</p>}
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-medium text-white">{entry.candidateName}</span>
+                        <span className="text-xs text-zinc-500 ml-2">{entry.templateName}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-mono text-amber-400">{entry.weightedScore.toFixed(2)}/5</span>
+                        <span className={`text-xs font-medium ${REC_LABELS[entry.overallRecommendation]?.color ?? "text-zinc-400"}`}>
+                          {REC_LABELS[entry.overallRecommendation]?.label ?? entry.overallRecommendation}
+                        </span>
+                        <button onClick={() => startEditEntry(entry)} className="text-xs text-amber-400 hover:text-amber-300">Edit</button>
+                        <button onClick={() => dispatch({ type: "DELETE_SCORECARD_ENTRY", id: entry.id })} className="text-xs text-red-400 hover:text-red-300">Delete</button>
+                      </div>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {entry.ratings.map((r) => {
+                        const tmpl = (state.scorecardTemplates ?? {})[entry.templateId];
+                        const critName = tmpl?.criteria.find((c) => c.id === r.criterionId)?.name ?? r.criterionId;
+                        return (
+                          <span key={r.criterionId} className="px-2 py-1 text-xs bg-zinc-800 rounded">
+                            <span className="text-zinc-400">{critName}:</span>{" "}
+                            <span className={SCORE_COLORS[r.score] ?? "text-zinc-300"}>{r.score}</span>
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <div className="flex items-center justify-between mt-2 text-xs text-zinc-500">
+                      <span>By: {entry.evaluator}</span>
+                      <span>{new Date(entry.submittedAt).toLocaleDateString()}</span>
+                    </div>
+                    {entry.notes && <p className="text-xs text-zinc-400 mt-1 italic">{entry.notes}</p>}
+                  </>
+                )}
               </div>
             ))
           )}

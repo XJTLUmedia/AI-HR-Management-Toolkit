@@ -43,7 +43,8 @@ type Action =
   | { type: "list_pending"; }
   | { type: "list_completed"; candidateId?: string }
   | { type: "analyze"; candidateId: string }
-  | { type: "summary"; jobId?: string };
+  | { type: "summary"; jobId?: string }
+  | { type: "delete"; interviewId: string };
 
 function nowISO(): string {
   return new Date().toISOString();
@@ -52,7 +53,7 @@ function nowISO(): string {
 export const mcpAtsInterviewFeedbackTool = {
   name: "ats_interview_feedback",
   description:
-    "Manage interview feedback in the ATS. Actions: submit (add feedback to completed interview), get (retrieve feedback for an interview), update (modify existing feedback), list_pending (interviews awaiting feedback), list_completed (interviews with feedback, optionally filtered by candidate), analyze (aggregate feedback for a candidate across all interviews), summary (hiring signal summary for a job or all jobs).",
+    "Manage interview feedback in the ATS. Actions: submit (add feedback to completed interview), get (retrieve feedback for an interview), update (modify existing feedback), delete (remove an interview), list_pending (interviews awaiting feedback), list_completed (interviews with feedback, optionally filtered by candidate), analyze (aggregate feedback for a candidate across all interviews), summary (hiring signal summary for a job or all jobs).",
   inputSchema: {
     type: "object" as const,
     properties: {
@@ -63,7 +64,7 @@ export const mcpAtsInterviewFeedbackTool = {
       action: {
         type: "object",
         description:
-          'Action to perform. "type": "submit" | "get" | "update" | "list_pending" | "list_completed" | "analyze" | "summary".',
+          'Action to perform. "type": "submit" | "get" | "update" | "delete" | "list_pending" | "list_completed" | "analyze" | "summary".',
       },
     },
     required: ["interviews", "action"],
@@ -286,6 +287,20 @@ export const mcpAtsInterviewFeedbackTool = {
             Math.round(
               (((byRec["strong-hire"] || 0) + (byRec["hire"] || 0)) / list.length) * 100
             ) + "%",
+        });
+      }
+
+      case "delete": {
+        const { interviewId } = action;
+        const interview = interviews[interviewId];
+        if (!interview) return r({ ok: false, error: `Interview ${interviewId} not found` });
+        const { [interviewId]: _, ...remaining } = interviews;
+        return r({
+          ok: true,
+          deleted: true,
+          interviewId,
+          interviews: remaining,
+          message: `Interview ${interviewId} deleted`,
         });
       }
 

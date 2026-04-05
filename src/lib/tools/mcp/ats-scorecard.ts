@@ -63,7 +63,22 @@ type Action =
   | { type: "get_entry"; entryId: string }
   | { type: "get_candidate_scores"; candidateId: string; templateId?: string }
   | { type: "aggregate"; candidateId?: string; jobId?: string; templateId?: string }
-  | { type: "delete_entry"; entryId: string };
+  | { type: "delete_entry"; entryId: string }
+  | {
+      type: "update_template";
+      templateId: string;
+      name?: string;
+      criteria?: { name: string; description: string; weight: number }[];
+      jobId?: string;
+      interviewType?: string;
+    }
+  | {
+      type: "update_entry";
+      entryId: string;
+      ratings?: { criterionId: string; score: number; comment?: string }[];
+      overallRecommendation?: string;
+      notes?: string;
+    };
 
 interface StateSlice {
   scorecardTemplates: Record<string, ScorecardTemplate>;
@@ -277,6 +292,67 @@ function handleAction(input: { action: Action; state: StateSlice }) {
       });
     }
 
+    case "update_template": {
+      const existing = templates[action.templateId];
+      if (!existing) return err("Template not found");
+      const updatedCriteria = action.criteria
+        ? action.criteria.map((c) => ({
+            id: genId("crit"),
+            name: c.name,
+            description: c.description,
+            weight: c.weight,
+          }))
+        : existing.criteria;
+      if (action.criteria) {
+        const totalWeight = action.criteria.reduce((s, c) => s + c.weight, 0);
+        if (Math.abs(totalWeight - 1) > 0.01) {
+          return err(`Criteria weights must sum to 1.0; got ${totalWeight.toFixed(3)}`);
+        }
+      }
+      const updated: ScorecardTemplate = {
+        ...existing,
+        name: action.name ?? existing.name,
+        jobId: action.jobId !== undefined ? action.jobId : existing.jobId,
+        interviewType: action.interviewType !== undefined ? action.interviewType : existing.interviewType,
+        criteria: updatedCriteria,
+      };
+      return ok({
+        updated: true,
+        template: updated,
+        _storeOp: "upsert_scorecard_template",
+        _entity: updated,
+      });
+    }
+
+    case "update_entry": {
+      const existing = entries[action.entryId];
+      if (!existing) return err("Entry not found");
+      if (action.ratings) {
+        const tmpl = templates[existing.templateId];
+        if (tmpl) {
+          const validCritIds = new Set(tmpl.criteria.map((c) => c.id));
+          for (const r of action.ratings) {
+            if (!validCritIds.has(r.criterionId))
+              return err(`Unknown criterion ${r.criterionId}`);
+            if (r.score < 1 || r.score > 5)
+              return err(`Score must be 1-5; got ${r.score} for ${r.criterionId}`);
+          }
+        }
+      }
+      const updated: ScorecardEntry = {
+        ...existing,
+        ratings: action.ratings ?? existing.ratings,
+        overallRecommendation: (action.overallRecommendation as ScorecardEntry["overallRecommendation"]) ?? existing.overallRecommendation,
+        notes: action.notes ?? existing.notes,
+      };
+      return ok({
+        updated: true,
+        entry: updated,
+        _storeOp: "upsert_scorecard_entry",
+        _entity: updated,
+      });
+    }
+
     default:
       return err(`Unknown action: ${(action as { type: string }).type}`);
   }
@@ -286,9 +362,9 @@ export const mcpAtsScorecardTool = {
   name: "ats_scorecard",
   description:
     "Structured interview scorecards — create evaluation templates with weighted criteria, " +
-    "fill scorecards per candidate/evaluator, aggregate scores to rank candidates, ensure " +
-    "consistent hiring decisions. Actions: create_template, list_templates, get_template, " +
-    "delete_template, fill, get_entry, get_candidate_scores, aggregate, delete_entry.",
+    "fill scorecards per candidate/evaluator, update templates and entries, aggregate scores to rank candidates, ensure " +
+    "consistent hiring decisions. Actions: create_template, list_templates, get_template, update_template, " +
+    "delete_template, fill, get_entry, update_entry, get_candidate_scores, aggregate, delete_entry.",
   inputSchema: {
     type: "object" as const,
     properties: {

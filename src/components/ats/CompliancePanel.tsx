@@ -22,8 +22,16 @@ function ShieldIcon() {
 }
 
 export default function CompliancePanel() {
-  const { state } = useATS();
+  const { state, dispatch } = useATS();
   const [activeTab, setActiveTab] = useState<"audit" | "eeo" | "gdpr" | "settings">("audit");
+  // EEO CRUD state
+  const [showCreateEEO, setShowCreateEEO] = useState(false);
+  const [editingEEOId, setEditingEEOId] = useState<string | null>(null);
+  const [eeoCandidateId, setEeoCandidateId] = useState("");
+  const [eeoGender, setEeoGender] = useState("");
+  const [eeoEthnicity, setEeoEthnicity] = useState("");
+  const [eeoVeteran, setEeoVeteran] = useState("");
+  const [eeoDisability, setEeoDisability] = useState("");
 
   const auditLog = useMemo(() => (state.auditLog ?? []).slice().reverse().slice(0, 100), [state.auditLog]);
   const eeoRecords = useMemo(() => state.eeoRecords ?? {}, [state.eeoRecords]);
@@ -39,6 +47,74 @@ export default function CompliancePanel() {
     }
     return { total: records.length, genderDist, ethnicityDist };
   }, [eeoRecords]);
+
+  const candidates = useMemo(() => state.candidates ?? {}, [state.candidates]);
+  const eeoList = useMemo(() => Object.values(eeoRecords).sort((a, b) => new Date(b.collectedAt).getTime() - new Date(a.collectedAt).getTime()), [eeoRecords]);
+
+  function resetEEOForm() {
+    setEeoCandidateId("");
+    setEeoGender("");
+    setEeoEthnicity("");
+    setEeoVeteran("");
+    setEeoDisability("");
+  }
+
+  function handleCreateEEO() {
+    if (!eeoCandidateId) return;
+    dispatch({
+      type: "UPSERT_EEO_RECORD",
+      record: {
+        candidateId: eeoCandidateId,
+        gender: (eeoGender || undefined) as "male" | "female" | "non-binary" | "prefer-not-to-say" | undefined,
+        ethnicity: eeoEthnicity || undefined,
+        veteranStatus: (eeoVeteran || undefined) as "yes" | "no" | "prefer-not-to-say" | undefined,
+        disabilityStatus: (eeoDisability || undefined) as "yes" | "no" | "prefer-not-to-say" | undefined,
+        collectedAt: new Date().toISOString(),
+      },
+    });
+    resetEEOForm();
+    setShowCreateEEO(false);
+  }
+
+  function startEditEEO(record: { candidateId: string; gender?: string; ethnicity?: string; veteranStatus?: string; disabilityStatus?: string }) {
+    setEditingEEOId(record.candidateId);
+    setEeoCandidateId(record.candidateId);
+    setEeoGender(record.gender ?? "");
+    setEeoEthnicity(record.ethnicity ?? "");
+    setEeoVeteran(record.veteranStatus ?? "");
+    setEeoDisability(record.disabilityStatus ?? "");
+  }
+
+  function handleSaveEEO() {
+    if (!editingEEOId) return;
+    dispatch({
+      type: "UPSERT_EEO_RECORD",
+      record: {
+        candidateId: editingEEOId,
+        gender: (eeoGender || undefined) as "male" | "female" | "non-binary" | "prefer-not-to-say" | undefined,
+        ethnicity: eeoEthnicity || undefined,
+        veteranStatus: (eeoVeteran || undefined) as "yes" | "no" | "prefer-not-to-say" | undefined,
+        disabilityStatus: (eeoDisability || undefined) as "yes" | "no" | "prefer-not-to-say" | undefined,
+        collectedAt: eeoRecords[editingEEOId]?.collectedAt ?? new Date().toISOString(),
+      },
+    });
+    resetEEOForm();
+    setEditingEEOId(null);
+  }
+
+  function toggleSetting(key: "gdprEnabled" | "eeoTrackingEnabled") {
+    dispatch({
+      type: "UPDATE_COMPLIANCE_SETTINGS",
+      settings: { ...settings!, [key]: !settings?.[key] },
+    });
+  }
+
+  function updateAnonymizeDays(days: number) {
+    dispatch({
+      type: "UPDATE_COMPLIANCE_SETTINGS",
+      settings: { ...settings!, anonymizeRejectedAfterDays: days },
+    });
+  }
 
   const tabs = [
     { id: "audit" as const, label: "Audit Trail" },
@@ -133,8 +209,89 @@ export default function CompliancePanel() {
               </div>
             </div>
           </div>
-          {eeoStats.total === 0 && (
-            <p className="text-sm text-zinc-500 text-center py-4">No EEO records. Enable EEO tracking in Settings and collect voluntary self-identification data.</p>
+
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-zinc-300">EEO Records</h3>
+            <button onClick={() => { setShowCreateEEO(!showCreateEEO); setEditingEEOId(null); resetEEOForm(); }} className="px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg hover:bg-red-500">+ Add Record</button>
+          </div>
+
+          {showCreateEEO && (
+            <div className="bg-zinc-900 rounded-lg p-4 border border-zinc-800 space-y-3">
+              <select value={eeoCandidateId} onChange={(e) => setEeoCandidateId(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-white focus:outline-none">
+                <option value="">Select candidate...</option>
+                {Object.values(candidates).filter((c) => !eeoRecords[c.id]).map((c) => (<option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>))}
+              </select>
+              <div className="grid grid-cols-2 gap-3">
+                <select value={eeoGender} onChange={(e) => setEeoGender(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-white focus:outline-none">
+                  <option value="">Gender (optional)</option>
+                  <option value="male">Male</option><option value="female">Female</option><option value="non-binary">Non-binary</option><option value="prefer-not-to-say">Prefer not to say</option>
+                </select>
+                <input value={eeoEthnicity} onChange={(e) => setEeoEthnicity(e.target.value)} placeholder="Ethnicity (optional)" className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none" />
+                <select value={eeoVeteran} onChange={(e) => setEeoVeteran(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-white focus:outline-none">
+                  <option value="">Veteran status (optional)</option>
+                  <option value="yes">Yes</option><option value="no">No</option><option value="prefer-not-to-say">Prefer not to say</option>
+                </select>
+                <select value={eeoDisability} onChange={(e) => setEeoDisability(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-white focus:outline-none">
+                  <option value="">Disability status (optional)</option>
+                  <option value="yes">Yes</option><option value="no">No</option><option value="prefer-not-to-say">Prefer not to say</option>
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={handleCreateEEO} className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-500">Create</button>
+                <button onClick={() => { setShowCreateEEO(false); resetEEOForm(); }} className="px-4 py-2 text-sm text-zinc-400 hover:text-white">Cancel</button>
+              </div>
+            </div>
+          )}
+
+          {eeoList.length === 0 ? (
+            <p className="text-sm text-zinc-500 text-center py-4">No EEO records. Enable EEO tracking in Settings and add records above.</p>
+          ) : (
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {eeoList.map((record) => {
+                const cand = candidates[record.candidateId];
+                if (editingEEOId === record.candidateId) {
+                  return (
+                    <div key={record.candidateId} className="bg-zinc-900 rounded-lg p-4 border border-red-500/20 space-y-3">
+                      <div className="text-sm text-white font-medium">{cand ? `${cand.firstName} ${cand.lastName}` : record.candidateId}</div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <select value={eeoGender} onChange={(e) => setEeoGender(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-white focus:outline-none">
+                          <option value="">Gender</option>
+                          <option value="male">Male</option><option value="female">Female</option><option value="non-binary">Non-binary</option><option value="prefer-not-to-say">Prefer not to say</option>
+                        </select>
+                        <input value={eeoEthnicity} onChange={(e) => setEeoEthnicity(e.target.value)} placeholder="Ethnicity" className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none" />
+                        <select value={eeoVeteran} onChange={(e) => setEeoVeteran(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-white focus:outline-none">
+                          <option value="">Veteran</option><option value="yes">Yes</option><option value="no">No</option><option value="prefer-not-to-say">Prefer not to say</option>
+                        </select>
+                        <select value={eeoDisability} onChange={(e) => setEeoDisability(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-white focus:outline-none">
+                          <option value="">Disability</option><option value="yes">Yes</option><option value="no">No</option><option value="prefer-not-to-say">Prefer not to say</option>
+                        </select>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={handleSaveEEO} className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-500">Save</button>
+                        <button onClick={() => { setEditingEEOId(null); resetEEOForm(); }} className="px-4 py-2 text-sm text-zinc-400 hover:text-white">Cancel</button>
+                      </div>
+                    </div>
+                  );
+                }
+                return (
+                  <div key={record.candidateId} className="bg-zinc-900 rounded-lg p-3 border border-zinc-800 flex items-center justify-between">
+                    <div>
+                      <span className="text-sm text-white">{cand ? `${cand.firstName} ${cand.lastName}` : record.candidateId}</span>
+                      <div className="flex gap-3 mt-1 text-xs text-zinc-500">
+                        {record.gender && <span>Gender: {record.gender}</span>}
+                        {record.ethnicity && <span>Ethnicity: {record.ethnicity}</span>}
+                        {record.veteranStatus && <span>Veteran: {record.veteranStatus}</span>}
+                        {record.disabilityStatus && <span>Disability: {record.disabilityStatus}</span>}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => startEditEEO(record)} className="text-xs text-red-400 hover:text-red-300">Edit</button>
+                      <button onClick={() => dispatch({ type: "DELETE_EEO_RECORD", candidateId: record.candidateId })} className="text-xs text-red-400 hover:text-red-300">Delete</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </motion.div>
       )}
@@ -166,28 +323,40 @@ export default function CompliancePanel() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
                 <span className="text-sm text-zinc-300">GDPR Enabled</span>
-                <span className={`text-sm font-medium ${settings?.gdprEnabled ? "text-emerald-400" : "text-red-400"}`}>
-                  {settings?.gdprEnabled ? "Yes" : "No"}
-                </span>
+                <button
+                  onClick={() => toggleSetting("gdprEnabled")}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings?.gdprEnabled ? "bg-emerald-600" : "bg-zinc-600"}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings?.gdprEnabled ? "translate-x-6" : "translate-x-1"}`} />
+                </button>
               </div>
               <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
                 <span className="text-sm text-zinc-300">EEO Tracking</span>
-                <span className={`text-sm font-medium ${settings?.eeoTrackingEnabled ? "text-emerald-400" : "text-red-400"}`}>
-                  {settings?.eeoTrackingEnabled ? "Yes" : "No"}
-                </span>
+                <button
+                  onClick={() => toggleSetting("eeoTrackingEnabled")}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings?.eeoTrackingEnabled ? "bg-emerald-600" : "bg-zinc-600"}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings?.eeoTrackingEnabled ? "translate-x-6" : "translate-x-1"}`} />
+                </button>
               </div>
               <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
                 <span className="text-sm text-zinc-300">Auto-Anonymize Rejected</span>
-                <span className="text-sm text-zinc-400">{settings?.anonymizeRejectedAfterDays ?? "N/A"} days</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    value={settings?.anonymizeRejectedAfterDays ?? 180}
+                    onChange={(e) => updateAnonymizeDays(Number(e.target.value))}
+                    className="w-20 bg-zinc-700 border border-zinc-600 rounded px-2 py-1 text-sm text-white text-right focus:outline-none"
+                  />
+                  <span className="text-xs text-zinc-400">days</span>
+                </div>
               </div>
               <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
                 <span className="text-sm text-zinc-300">Retention Policies</span>
                 <span className="text-sm text-zinc-400">{settings?.retentionPolicies?.length ?? 0} configured</span>
               </div>
             </div>
-            <p className="text-xs text-zinc-500 mt-2">
-              Use the <code className="text-emerald-400">ats_compliance</code> MCP tool with action <code className="text-emerald-400">update_settings</code> to modify these settings.
-            </p>
           </div>
         </motion.div>
       )}

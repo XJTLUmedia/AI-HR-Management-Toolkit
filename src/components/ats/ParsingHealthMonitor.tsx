@@ -114,31 +114,24 @@ export default function ParsingHealthMonitor() {
   const [correctionForm, setCorrectionForm] = useState<CorrectionForm>(EMPTY_CORRECTION);
   const [correctionResult, setCorrectionResult] = useState<string | null>(null);
 
-  // Call the parsing_health MCP tool via the /api/mcp endpoint
+  // Call the parsing_health tool via the standalone /api/parsing-health endpoint
   const callHealthTool = useCallback(async (action: string, extra?: Record<string, unknown>) => {
     setLoading(true);
     setError(null);
     try {
-      // Call MCP tool via JSON-RPC over /api/mcp
-      const response = await fetch("/api/mcp", {
+      // Call standalone REST API (no MCP dependency)
+      const response = await fetch("/api/parsing-health", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: Date.now(),
-          method: "tools/call",
-          params: {
-            name: "parsing_health",
-            arguments: { action, ...extra },
-          },
-        }),
+        body: JSON.stringify({ action, ...extra }),
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const rpc = await response.json();
-      if (rpc.error) throw new Error(rpc.error.message || "MCP error");
-      const text = rpc.result?.content?.[0]?.text;
-      if (!text) throw new Error("Empty response");
-      return JSON.parse(text);
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+        throw new Error(err.error || `HTTP ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+      return data;
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Unknown error";
       setError(msg);

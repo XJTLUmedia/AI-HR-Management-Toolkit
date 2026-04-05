@@ -94,6 +94,7 @@ type ATSAction =
   | { type: "UPDATE_SCORECARD_TEMPLATE"; template: ScorecardTemplate }
   | { type: "DELETE_SCORECARD_TEMPLATE"; id: string }
   | { type: "ADD_SCORECARD_ENTRY"; entry: ScorecardEntry }
+  | { type: "UPDATE_SCORECARD_ENTRY"; entry: ScorecardEntry }
   | { type: "DELETE_SCORECARD_ENTRY"; id: string }
   // Onboarding
   | { type: "ADD_ONBOARDING_CHECKLIST"; checklist: OnboardingChecklist }
@@ -217,6 +218,7 @@ function atsReducer(state: ATSState, action: ATSAction): ATSState {
     case "DELETE_SCORECARD_TEMPLATE":
       return removeST(state, action.id);
     case "ADD_SCORECARD_ENTRY":
+    case "UPDATE_SCORECARD_ENTRY":
       return upsertScorecardEntry(state, action.entry);
     case "DELETE_SCORECARD_ENTRY":
       return removeSE(state, action.id);

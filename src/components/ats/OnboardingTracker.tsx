@@ -31,9 +31,9 @@ const STATUS_COLORS: Record<string, string> = {
 
 const CATEGORY_LABELS: Record<string, string> = {
   paperwork: "📄 Paperwork",
-  it_setup: "💻 IT Setup",
+  "it-setup": "💻 IT Setup",
   training: "📚 Training",
-  orientation: "🏢 Orientation",
+  introduction: "🏢 Introduction",
   compliance: "🛡️ Compliance",
   other: "📋 Other",
 };
@@ -42,6 +42,18 @@ export default function OnboardingTracker() {
   const { state, dispatch } = useATS();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "completed">("active");
+  const [showCreate, setShowCreate] = useState(false);
+  const [newCandidateId, setNewCandidateId] = useState("");
+  const [newJobId, setNewJobId] = useState("");
+  const [newStartDate, setNewStartDate] = useState("");
+  const [newTasks, setNewTasks] = useState<{ title: string; category: string; assignee: string; dueDate: string }[]>([
+    { title: "", category: "other", assignee: "", dueDate: "" },
+  ]);
+  const [editingTask, setEditingTask] = useState<{ checklistId: string; taskId: string } | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editAssignee, setEditAssignee] = useState("");
+  const [editDueDate, setEditDueDate] = useState("");
+  const [editCategory, setEditCategory] = useState("other");
 
   const checklists = useMemo(() => Object.values(state.onboardingChecklists ?? {}), [state.onboardingChecklists]);
   const candidates = useMemo(() => state.candidates ?? {}, [state.candidates]);
@@ -79,6 +91,93 @@ export default function OnboardingTracker() {
     });
   }
 
+  function handleCreateChecklist() {
+    if (!newCandidateId || !newJobId || !newStartDate) return;
+    const validTasks = newTasks.filter((t) => t.title.trim());
+    if (validTasks.length === 0) return;
+    const id = `onb_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    dispatch({
+      type: "ADD_ONBOARDING_CHECKLIST",
+      checklist: {
+        id,
+        candidateId: newCandidateId,
+        jobId: newJobId,
+        startDate: newStartDate,
+        tasks: validTasks.map((t) => ({
+          id: `task_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          title: t.title.trim(),
+          description: "",
+          assignee: t.assignee || undefined,
+          dueDate: t.dueDate || undefined,
+          status: "pending" as const,
+          category: t.category as "paperwork" | "it-setup" | "training" | "introduction" | "compliance" | "other",
+        })),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    });
+    setNewCandidateId("");
+    setNewJobId("");
+    setNewStartDate("");
+    setNewTasks([{ title: "", category: "other", assignee: "", dueDate: "" }]);
+    setShowCreate(false);
+  }
+
+  function handleDeleteChecklist(id: string) {
+    dispatch({ type: "DELETE_ONBOARDING_CHECKLIST", id });
+    if (selectedId === id) setSelectedId(null);
+  }
+
+  function startEditTask(checklistId: string, task: { id: string; title: string; assignee?: string; dueDate?: string; category: string }) {
+    setEditingTask({ checklistId, taskId: task.id });
+    setEditTitle(task.title);
+    setEditAssignee(task.assignee ?? "");
+    setEditDueDate(task.dueDate ?? "");
+    setEditCategory(task.category);
+  }
+
+  function handleSaveTaskEdit() {
+    if (!editingTask) return;
+    const cl = (state.onboardingChecklists ?? {})[editingTask.checklistId];
+    if (!cl) return;
+    const tasks = cl.tasks.map((t) =>
+      t.id === editingTask.taskId
+        ? { ...t, title: editTitle.trim() || t.title, assignee: editAssignee || undefined, dueDate: editDueDate || undefined, category: editCategory as "paperwork" | "it-setup" | "training" | "introduction" | "compliance" | "other" }
+        : t
+    );
+    dispatch({
+      type: "UPDATE_ONBOARDING_CHECKLIST",
+      checklist: { ...cl, tasks, updatedAt: new Date().toISOString() },
+    });
+    setEditingTask(null);
+  }
+
+  function handleRemoveTask(checklistId: string, taskId: string) {
+    const cl = (state.onboardingChecklists ?? {})[checklistId];
+    if (!cl) return;
+    dispatch({
+      type: "UPDATE_ONBOARDING_CHECKLIST",
+      checklist: { ...cl, tasks: cl.tasks.filter((t) => t.id !== taskId), updatedAt: new Date().toISOString() },
+    });
+  }
+
+  function handleAddTask(checklistId: string) {
+    const cl = (state.onboardingChecklists ?? {})[checklistId];
+    if (!cl) return;
+    const newTask = {
+      id: `task_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      title: "New Task",
+      description: "",
+      status: "pending" as const,
+      category: "other" as const,
+    };
+    dispatch({
+      type: "UPDATE_ONBOARDING_CHECKLIST",
+      checklist: { ...cl, tasks: [...cl.tasks, newTask], completedAt: undefined, updatedAt: new Date().toISOString() },
+    });
+    startEditTask(checklistId, newTask);
+  }
+
   // Overdue tasks
   const overdueCount = useMemo(() => {
     const now = new Date();
@@ -106,26 +205,114 @@ export default function OnboardingTracker() {
             </p>
           </div>
         </div>
-        <div className="flex gap-1 bg-zinc-900 rounded-lg p-1 border border-zinc-800">
-          {(["active", "all", "completed"] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                filter === f ? "bg-teal-600 text-white" : "text-zinc-400 hover:text-zinc-200"
-              }`}
-            >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowCreate(!showCreate)}
+            className="px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-500 transition-colors"
+          >
+            + New Checklist
+          </button>
+          <div className="flex gap-1 bg-zinc-900 rounded-lg p-1 border border-zinc-800">
+            {(["active", "all", "completed"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                  filter === f ? "bg-teal-600 text-white" : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                {f.charAt(0).toUpperCase() + f.slice(1)}
+              </button>
+            ))}
+          </div>
         </div>
       </motion.div>
+
+      {showCreate && (
+        <motion.div variants={itemVariants} className="bg-zinc-900 rounded-lg p-5 border border-zinc-800 space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <select
+              value={newCandidateId}
+              onChange={(e) => setNewCandidateId(e.target.value)}
+              className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+            >
+              <option value="">Select Candidate</option>
+              {Object.values(candidates).map((c) => (
+                <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>
+              ))}
+            </select>
+            <select
+              value={newJobId}
+              onChange={(e) => setNewJobId(e.target.value)}
+              className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+            >
+              <option value="">Select Job</option>
+              {Object.values(state.jobs ?? {}).map((j) => (
+                <option key={j.id} value={j.id}>{j.title}</option>
+              ))}
+            </select>
+            <input
+              type="date"
+              value={newStartDate}
+              onChange={(e) => setNewStartDate(e.target.value)}
+              className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+            />
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs text-zinc-400 font-medium">Tasks</p>
+            {newTasks.map((t, idx) => (
+              <div key={idx} className="flex gap-2">
+                <input
+                  placeholder="Task title"
+                  value={t.title}
+                  onChange={(e) => { const u = [...newTasks]; u[idx] = { ...u[idx], title: e.target.value }; setNewTasks(u); }}
+                  className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none"
+                />
+                <select
+                  value={t.category}
+                  onChange={(e) => { const u = [...newTasks]; u[idx] = { ...u[idx], category: e.target.value }; setNewTasks(u); }}
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-2 text-xs text-white focus:outline-none"
+                >
+                  {Object.keys(CATEGORY_LABELS).map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <input
+                  placeholder="Assignee"
+                  value={t.assignee}
+                  onChange={(e) => { const u = [...newTasks]; u[idx] = { ...u[idx], assignee: e.target.value }; setNewTasks(u); }}
+                  className="w-28 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none"
+                />
+                <input
+                  type="date"
+                  value={t.dueDate}
+                  onChange={(e) => { const u = [...newTasks]; u[idx] = { ...u[idx], dueDate: e.target.value }; setNewTasks(u); }}
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-2 text-sm text-white focus:outline-none"
+                />
+                {newTasks.length > 1 && (
+                  <button onClick={() => setNewTasks(newTasks.filter((_, i) => i !== idx))} className="text-xs text-red-400 hover:text-red-300 px-2">✕</button>
+                )}
+              </div>
+            ))}
+            <button
+              onClick={() => setNewTasks([...newTasks, { title: "", category: "other", assignee: "", dueDate: "" }])}
+              className="text-xs text-teal-400 hover:text-teal-300"
+            >
+              + Add Task
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={handleCreateChecklist} className="px-4 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-500">Create</button>
+            <button onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-zinc-400 hover:text-white">Cancel</button>
+          </div>
+        </motion.div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <motion.div variants={itemVariants} className="lg:col-span-1 space-y-2">
           {filtered.length === 0 ? (
             <p className="text-sm text-zinc-500 py-8 text-center">
-              No {filter === "all" ? "" : filter} checklists. Use the <code className="text-emerald-400">ats_onboarding</code> MCP tool to create one.
+              No {filter === "all" ? "" : filter} checklists. Click &quot;+ New Checklist&quot; to create one.
             </p>
           ) : (
             filtered.map((cl) => {
@@ -145,7 +332,15 @@ export default function OnboardingTracker() {
                     <span className="text-sm font-medium text-white">
                       {cand ? `${cand.firstName} ${cand.lastName}` : cl.candidateId}
                     </span>
-                    <span className="text-xs text-zinc-400">{prog.pct}%</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-zinc-400">{prog.pct}%</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDeleteChecklist(cl.id); }}
+                        className="text-xs text-red-400 hover:text-red-300"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   </div>
                   <div className="w-full bg-zinc-800 rounded-full h-1.5 mt-2">
                     <div
@@ -198,6 +393,25 @@ export default function OnboardingTracker() {
                   <div className="space-y-2">
                     {tasks.map((task) => {
                       const isOverdue = task.status !== "completed" && task.status !== "skipped" && task.dueDate && new Date(task.dueDate) < new Date();
+                      const isEditing = editingTask?.checklistId === selected.id && editingTask?.taskId === task.id;
+                      if (isEditing) {
+                        return (
+                          <div key={task.id} className="p-2.5 rounded-lg bg-teal-500/5 border border-teal-500/20 space-y-2">
+                            <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Task title" className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-teal-500" />
+                            <div className="flex gap-2">
+                              <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
+                                {Object.keys(CATEGORY_LABELS).map((cat) => (<option key={cat} value={cat}>{cat}</option>))}
+                              </select>
+                              <input value={editAssignee} onChange={(e) => setEditAssignee(e.target.value)} placeholder="Assignee" className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-sm text-white placeholder-zinc-500 focus:outline-none" />
+                              <input type="date" value={editDueDate} onChange={(e) => setEditDueDate(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-sm text-white focus:outline-none" />
+                            </div>
+                            <div className="flex gap-2">
+                              <button onClick={handleSaveTaskEdit} className="px-3 py-1 text-xs bg-teal-600 text-white rounded hover:bg-teal-500">Save</button>
+                              <button onClick={() => setEditingTask(null)} className="px-3 py-1 text-xs text-zinc-400 hover:text-white">Cancel</button>
+                            </div>
+                          </div>
+                        );
+                      }
                       return (
                         <div key={task.id} className={`flex items-center justify-between p-2.5 rounded-lg ${isOverdue ? "bg-red-500/5 border border-red-500/20" : "bg-zinc-800/50"}`}>
                           <div className="flex-1 min-w-0">
@@ -217,6 +431,12 @@ export default function OnboardingTracker() {
                             </div>
                           </div>
                           <div className="flex gap-1 ml-3">
+                            <button
+                              onClick={() => startEditTask(selected.id, task)}
+                              className="px-2 py-1 text-xs text-teal-400 hover:text-teal-300 hover:bg-teal-500/10 rounded"
+                            >
+                              Edit
+                            </button>
                             {task.status !== "completed" && (
                               <button
                                 onClick={() => handleTaskStatus(selected.id, task.id, "completed")}
@@ -241,11 +461,23 @@ export default function OnboardingTracker() {
                                 Skip
                               </button>
                             )}
+                            <button
+                              onClick={() => handleRemoveTask(selected.id, task.id)}
+                              className="px-2 py-1 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded"
+                            >
+                              ✕
+                            </button>
                           </div>
                         </div>
                       );
                     })}
                   </div>
+                  <button
+                    onClick={() => handleAddTask(selected.id)}
+                    className="mt-2 text-xs text-teal-400 hover:text-teal-300"
+                  >
+                    + Add Task
+                  </button>
                 </div>
               ))}
             </div>

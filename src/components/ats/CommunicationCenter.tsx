@@ -48,6 +48,12 @@ export default function CommunicationCenter() {
   const [newTemplateBody, setNewTemplateBody] = useState("");
   const [newTemplateCategory, setNewTemplateCategory] = useState("custom");
   const [searchQuery, setSearchQuery] = useState("");
+  // Edit template state
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editSubject, setEditSubject] = useState("");
+  const [editBody, setEditBody] = useState("");
+  const [editCategory, setEditCategory] = useState("custom");
 
   const templates = useMemo(() => Object.values(state.emailTemplates ?? {}), [state.emailTemplates]);
   const commLog = useMemo(
@@ -100,6 +106,31 @@ export default function CommunicationCenter() {
     setNewTemplateBody("");
     setNewTemplateCategory("custom");
     setShowCreateTemplate(false);
+  }
+
+  function startEditTemplate(tmpl: (typeof templates)[0]) {
+    setEditingTemplateId(tmpl.id);
+    setEditName(tmpl.name);
+    setEditSubject(tmpl.subject);
+    setEditBody(tmpl.body);
+    setEditCategory(tmpl.category);
+  }
+
+  function handleSaveTemplate() {
+    if (!editingTemplateId || !editName.trim() || !editSubject.trim()) return;
+    const existing = (state.emailTemplates ?? {})[editingTemplateId];
+    dispatch({
+      type: "ADD_EMAIL_TEMPLATE",
+      template: {
+        ...existing,
+        name: editName.trim(),
+        subject: editSubject.trim(),
+        body: editBody.trim(),
+        category: editCategory as "custom",
+        updatedAt: new Date().toISOString(),
+      },
+    });
+    setEditingTemplateId(null);
   }
 
   return (
@@ -254,23 +285,70 @@ export default function CommunicationCenter() {
           ) : (
             templates.map((tmpl) => (
               <div key={tmpl.id} className="bg-zinc-900 rounded-lg p-4 border border-zinc-800">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-white">{tmpl.name}</span>
-                    <span className={`px-1.5 py-0.5 text-[10px] rounded ${CATEGORY_COLORS[tmpl.category] ?? CATEGORY_COLORS.general}`}>
-                      {tmpl.category.replace(/_/g, " ")}
-                    </span>
+                {editingTemplateId === tmpl.id ? (
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <input
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      />
+                      <select
+                        value={editCategory}
+                        onChange={(e) => setEditCategory(e.target.value)}
+                        className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"
+                      >
+                        {Object.keys(CATEGORY_COLORS).map((cat) => (
+                          <option key={cat} value={cat}>{cat.replace(/_/g, " ")}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <input
+                      value={editSubject}
+                      onChange={(e) => setEditSubject(e.target.value)}
+                      placeholder="Subject"
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                    />
+                    <textarea
+                      value={editBody}
+                      onChange={(e) => setEditBody(e.target.value)}
+                      rows={5}
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-sky-500 resize-none"
+                    />
+                    <div className="flex gap-2">
+                      <button onClick={handleSaveTemplate} className="px-4 py-2 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-500">Save</button>
+                      <button onClick={() => setEditingTemplateId(null)} className="px-4 py-2 text-sm text-zinc-400 hover:text-white">Cancel</button>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => dispatch({ type: "DELETE_EMAIL_TEMPLATE", id: tmpl.id })}
-                    className="text-xs text-red-400 hover:text-red-300"
-                  >
-                    Delete
-                  </button>
-                </div>
-                <p className="text-sm text-zinc-300 mt-2">Subject: {tmpl.subject}</p>
-                <p className="text-xs text-zinc-500 mt-1 line-clamp-3 whitespace-pre-wrap">{tmpl.body}</p>
-                <p className="text-xs text-zinc-600 mt-2">Updated: {new Date(tmpl.updatedAt).toLocaleDateString()}</p>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-white">{tmpl.name}</span>
+                        <span className={`px-1.5 py-0.5 text-[10px] rounded ${CATEGORY_COLORS[tmpl.category] ?? CATEGORY_COLORS.general}`}>
+                          {tmpl.category.replace(/_/g, " ")}
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => startEditTemplate(tmpl)}
+                          className="text-xs text-sky-400 hover:text-sky-300"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => dispatch({ type: "DELETE_EMAIL_TEMPLATE", id: tmpl.id })}
+                          className="text-xs text-red-400 hover:text-red-300"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-sm text-zinc-300 mt-2">Subject: {tmpl.subject}</p>
+                    <p className="text-xs text-zinc-500 mt-1 line-clamp-3 whitespace-pre-wrap">{tmpl.body}</p>
+                    <p className="text-xs text-zinc-600 mt-2">Updated: {new Date(tmpl.updatedAt).toLocaleDateString()}</p>
+                  </>
+                )}
               </div>
             ))
           )}

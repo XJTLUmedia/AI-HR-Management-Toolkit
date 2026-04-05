@@ -61,26 +61,20 @@ export default function AnalysisPanel() {
         if (jobDescription.trim()) args.jobDescription = jobDescription;
       }
 
-      const res = await fetch("/api/mcp", {
+      const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: Date.now(),
-          method: "tools/call",
-          params: { name: "analyze_resume", arguments: args },
-        }),
+        body: JSON.stringify(args),
       });
 
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message || "MCP error");
-
-      const content = json.result?.content?.[0];
-      if (content?.type === "text") {
-        setResult(JSON.parse(content.text));
-      } else {
-        throw new Error("Unexpected response format");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        throw new Error(err.error || "Analysis failed");
       }
+
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      setResult(json);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
     } finally {
