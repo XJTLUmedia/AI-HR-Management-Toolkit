@@ -27,6 +27,7 @@ import {
   mcpAtsScorecardTool,
   mcpAtsOnboardingTool,
   mcpAtsCommunicationTool,
+  mcpParsingHealthTool,
 } from "@/lib/tools/mcp";
 
 // MCP ToolAnnotations per tool — readOnlyHint, destructiveHint, idempotentHint, openWorldHint
@@ -58,6 +59,7 @@ const TOOL_ANNOTATIONS: Record<string, {
   ats_scorecard:         { title: "ATS: Scorecards",          readOnlyHint: false, destructiveHint: true,  idempotentHint: false, openWorldHint: false },
   ats_onboarding:        { title: "ATS: Onboarding",          readOnlyHint: false, destructiveHint: true,  idempotentHint: false, openWorldHint: false },
   ats_communication:     { title: "ATS: Communication",       readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  parsing_health:        { title: "Parsing Health & Drift",   readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
 };
 
 // Static resources exposed by this MCP server
@@ -238,6 +240,8 @@ const allTools = [
   mcpAtsScorecardTool,
   mcpAtsOnboardingTool,
   mcpAtsCommunicationTool,
+  // Parsing Health & Feedback Loop (1)
+  mcpParsingHealthTool,
   // Utilities (2)
   exportResultsTool,
   sendEmailTool,

@@ -25,3 +25,6 @@ export { mcpAtsTalentPoolTool } from "./ats-talent-pool";
 export { mcpAtsScorecardTool } from "./ats-scorecard";
 export { mcpAtsOnboardingTool } from "./ats-onboarding";
 export { mcpAtsCommunicationTool } from "./ats-communication";
+
+// Parsing health & feedback loop (drift detection, corrections, learned patterns)
+export { mcpParsingHealthTool } from "./parsing-health";

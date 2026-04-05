@@ -187,5 +187,11 @@ ${pipeline.cleanText}`,
         })),
       },
     },
+    health: {
+      parseId: pipeline.health.parseId,
+      anomalies: pipeline.health.anomalies,
+      dispositionCounts: pipeline.health.dispositionCounts,
+      driftDetected: pipeline.health.driftDetected,
+    },
   });
 }

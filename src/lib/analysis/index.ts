@@ -35,3 +35,21 @@ export type { PipelineResult, PipelineStage } from "./pipeline";
 
 export { assessCandidate } from "./criteria-scorer";
 export type { AxisScore, AssessmentResult } from "./criteria-scorer";
+
+export { ParsingHealthMonitor, getParsingHealthMonitor, resetParsingHealthMonitor } from "./parsing-health";
+export type {
+  ParseHealthSnapshot,
+  ParseAnomaly,
+  DriftReport,
+  WindowStats,
+  FieldConfidence,
+  HealthConfig,
+} from "./parsing-health";
+
+export { ParsingFeedbackLoop, getParsingFeedbackLoop, resetParsingFeedbackLoop } from "./feedback-loop";
+export type {
+  ParseCorrection,
+  CorrectionErrorType,
+  LearnedPattern,
+  FeedbackStats,
+} from "./feedback-loop";

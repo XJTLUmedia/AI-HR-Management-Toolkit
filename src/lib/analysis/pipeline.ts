@@ -23,6 +23,13 @@ import {
   type ExtractedContact,
   type SectionBoundary,
 } from "./pattern-matcher";
+import {
+  getParsingHealthMonitor,
+  type ParseHealthSnapshot,
+  type FieldConfidence,
+  type ParseAnomaly,
+} from "./parsing-health";
+import { getParsingFeedbackLoop } from "./feedback-loop";
 
 export interface PipelineStage {
   name: string;
@@ -75,6 +82,15 @@ export interface PipelineResult {
       sectionsMissing: string[];
     };
     assumptions: Array<{ assumption: string; limitation: string; mitigated: boolean }>;
+  };
+
+  /** Health tracking — drift detection and anomaly reporting */
+  health: {
+    parseId: string;
+    anomalies: ParseAnomaly[];
+    fieldConfidences: FieldConfidence[];
+    dispositionCounts: { accepted: number; review: number; rejected: number };
+    driftDetected: boolean;
   };
 }
 
@@ -257,6 +273,59 @@ export function runPipeline(rawText: string): PipelineResult {
     0
   );
 
+  // -- Health Tracking: Record parse and detect anomalies --
+  const monitor = getParsingHealthMonitor();
+  const feedbackLoop = getParsingFeedbackLoop();
+
+  const parseId = `parse_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+  // Build field-level confidences from classification entities
+  const fieldConfidences: FieldConfidence[] = [
+    ...classification.entities.map((e) => ({
+      field: e.type,
+      confidence: e.confidence,
+      rawValue: e.text,
+      disposition: monitor.classifyConfidence(e.confidence),
+    })),
+    // Add section completeness as a pseudo-field
+    {
+      field: "section_completeness",
+      confidence: completenessScore,
+      rawValue: `${sectionsFound.length}/${EXPECTED_SECTIONS.length} sections`,
+      disposition: monitor.classifyConfidence(completenessScore),
+    },
+  ];
+
+  const dispositionCounts = { accepted: 0, review: 0, rejected: 0 };
+  for (const fc of fieldConfidences) {
+    dispositionCounts[fc.disposition]++;
+  }
+
+  const stageConfidences: Record<string, number> = {};
+  for (const s of stages) {
+    stageConfidences[s.name] = s.confidence;
+  }
+
+  const snapshot: ParseHealthSnapshot = {
+    parseId,
+    timestamp: Date.now(),
+    overallConfidence: Math.round(overallConfidence * 100) / 100,
+    stageConfidences,
+    fieldConfidences,
+    dispositionCounts,
+    anomalies: [],
+    sourceMeta: {
+      fileType: "unknown", // caller can enrich this
+      fileSize: rawText.length,
+    },
+  };
+
+  const anomalies = monitor.recordParse(snapshot);
+  feedbackLoop.recordParseAttempt();
+
+  // Check drift status
+  const driftReport = monitor.detectDrift();
+
   return {
     cleanText: sanitization.cleanText,
     rawText,
@@ -268,5 +337,12 @@ export function runPipeline(rawText: string): PipelineResult {
     classification,
     patternMatching: { metrics, contact, sections, estimatedYears },
     serialization,
+    health: {
+      parseId,
+      anomalies,
+      fieldConfidences,
+      dispositionCounts,
+      driftDetected: driftReport.driftDetected,
+    },
   };
 }

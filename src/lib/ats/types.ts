@@ -406,6 +406,9 @@ export type ATSView =
   | "onboarding"
   | "compliance"
   | "communications"
+  | "search"
+  | "analysis"
+  | "parsing-health"
   | "settings"
   | "parser";
 

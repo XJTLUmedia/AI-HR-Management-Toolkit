@@ -21,6 +21,9 @@ import TalentPoolManager from "@/components/ats/TalentPoolManager";
 import ScorecardManager from "@/components/ats/ScorecardManager";
 import OnboardingTracker from "@/components/ats/OnboardingTracker";
 import CommunicationCenter from "@/components/ats/CommunicationCenter";
+import SearchPanel from "@/components/ats/SearchPanel";
+import AnalysisPanel from "@/components/ats/AnalysisPanel";
+import ParsingHealthMonitor from "@/components/ats/ParsingHealthMonitor";
 
 // Existing resume parser components
 import { FileUpload } from "@/components/FileUpload";
@@ -787,6 +790,12 @@ export default function Home() {
         return <CompliancePanel />;
       case "communications":
         return <CommunicationCenter />;
+      case "search":
+        return <SearchPanel />;
+      case "analysis":
+        return <AnalysisPanel />;
+      case "parsing-health":
+        return <ParsingHealthMonitor />;
       case "parser":
         return <ResumeParserView />;
       case "settings":
